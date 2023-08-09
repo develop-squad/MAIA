@@ -3,6 +3,7 @@ import gradio as gr
 import torch
 
 from alpaca.core import Alpaca
+from whisperx.core import WhisperX
 
 if torch.cuda.is_available():
     device = "cuda"
@@ -20,6 +21,7 @@ def main(
     server_port: int = 36000,
     share_gradio: bool = False,
 ):
+    '''
     alpaca = Alpaca(
         device=device,
         load_8bit=True,
@@ -31,6 +33,24 @@ def main(
         fn=alpaca.fn,
         inputs=alpaca.inputs,
         outputs=alpaca.outputs,
+        title="MAIA",
+    ).queue().launch(
+        server_name=server_name,
+        server_port=server_port,
+        share=share_gradio
+    )
+    '''
+    whisper = WhisperX(
+        device=device,
+        device_index= 0,
+        compute_type="float16",
+        batch_size=16,
+    )
+
+    gr.Interface(
+        fn=whisper.fn,
+        inputs=whisper.inputs,
+        outputs=whisper.outputs,
         title="MAIA",
     ).queue().launch(
         server_name=server_name,
