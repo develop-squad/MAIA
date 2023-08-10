@@ -19,9 +19,12 @@ setup(
         for r in pkg_resources.parse_requirements(
             open(os.path.join(os.path.dirname(__file__), "requirements.txt"))
         )
-    ] + ["pyannote.audio @ git+https://github.com/pyannote/pyannote-audio@11b56a137a578db9335efc00298f6ec1932e6317"],
+    ] + [
+        "peft @ git+https://github.com/huggingface/peft.git",
+        "pyannote.audio @ git+https://github.com/pyannote/pyannote-audio@11b56a137a578db9335efc00298f6ec1932e6317",
+        ],
     entry_points = {
-        'console_scripts': ['whisperx=whisperx.transcribe:cli'],
+        'console_scripts': ['whisperx=whisperx.whisperx.transcribe:cli'],
     },
     include_package_data=True,
     extras_require={'dev': ['pytest']},

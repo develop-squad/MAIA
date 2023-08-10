@@ -1,0 +1,4 @@
+include whisperx/whisperx/assets/*
+include whisperx/whisperx/assets/gpt2/*
+include whisperx/whisperx/assets/multilingual/*
+include whisperx/whisperx/normalizers/english.json
