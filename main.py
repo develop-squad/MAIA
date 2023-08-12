@@ -44,7 +44,7 @@ def run_whisperx(
     from whisperx.core import WhisperX
     
     whisper = WhisperX(
-        device=device,
+        device=get_device(),
         device_index= 0,
         compute_type="float16",
         batch_size=16,
