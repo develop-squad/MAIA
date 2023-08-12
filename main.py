@@ -1,7 +1,16 @@
 import fire
 import gradio as gr
 import torch
+import os
 from typing import Callable
+from dotenv import load_dotenv
+
+load_dotenv()
+SSL_CERT_PATH = os.environ.get("SSL_CERT_PATH")
+SSL_KEY_PATH = os.environ.get("SSL_KEY_PATH")
+
+if not SSL_CERT_PATH or not SSL_KEY_PATH:
+    raise ValueError("Please set the SSL_CERT_PATH and SSL_KEY_PATH environment variables.")
 
 def get_device():
     if torch.cuda.is_available():
@@ -34,7 +43,7 @@ def run_chatgpt(
     ).queue().launch(
         server_name=server_name,
         server_port=server_port,
-        share=share_gradio
+        share=share_gradio,
     )
 
 def run_whisperx(
@@ -128,6 +137,8 @@ def main(
         server_name=server_name,
         server_port=server_port,
         share=share_gradio,
+        ssl_certfile=SSL_CERT_PATH,
+        ssl_keyfile=SSL_KEY_PATH,
     )
 
 if __name__ == "__main__":
