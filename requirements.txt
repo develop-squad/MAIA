@@ -10,4 +10,12 @@ git+https://github.com/huggingface/peft.git
 transformers>=4.28.0
 sentencepiece
 gradio
+torch>=2
+torchaudio>=2
+faster-whisper
+ffmpeg-python>=0.2
+pandas
+setuptools>=65
+nltk
+git+https://github.com/pyannote/pyannote-audio@11b56a137a578db9335efc00298f6ec1932e6317
 openai
