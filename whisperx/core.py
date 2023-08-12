@@ -47,6 +47,7 @@ class WhisperX:
         self.inputs = [
             gr.components.Audio(
                 label="STT Model",
+                source="microphone",
                 type="filepath",
             ),
         ]
