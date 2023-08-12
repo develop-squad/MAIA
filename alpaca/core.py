@@ -54,7 +54,7 @@ class Alpaca:
             model = LlamaForCausalLM.from_pretrained(
                 base_model,
                 device_map={"": device},
-                low_cpu_mem_useage=True,
+                low_cpu_mem_usage=True,
             )
             model = PeftModel.from_pretrained(
                 model,
