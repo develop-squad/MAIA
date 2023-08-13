@@ -37,8 +37,8 @@ class PaLM:
                 top_p=top_p,
                 top_k=top_k,
             )
-            role = chat.messages[0]['role']
-            reply = chat.messages[0]['content']
+            role = chat.messages[-1]['role']
+            reply = chat.messages[-1]['content']
 
             self.messages.append({
                 "role": role,
