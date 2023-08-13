@@ -96,6 +96,27 @@ def run_alpaca(
         share=share_gradio,
     )
 
+def run_bard(
+    bard_api_key: str = "",
+    server_name: str = "0.0.0.0",
+    server_port: int = 36000,
+    share_gradio: bool = False,
+):
+    from bard.core import Bard
+    
+    bard = Bard(api_key=bard_api_key)
+
+    gr.Interface(
+        fn=bard.fn,
+        inputs=bard.inputs,
+        outputs=bard.outputs,
+        title="MAIA (Bard Only)",
+    ).queue().launch(
+        server_name=server_name,
+        server_port=server_port,
+        share=share_gradio,
+    )
+
 def main(
     server_name: str = "0.0.0.0",
     server_port: int = 36000,
