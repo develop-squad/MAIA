@@ -117,6 +117,27 @@ def run_bard(
         share=share_gradio,
     )
 
+def run_palm(
+    google_api_key: str = "",
+    server_name: str = "0.0.0.0",
+    server_port: int = 36000,
+    share_gradio: bool = False,
+):
+    from palm.core import PaLM
+    
+    palm = PaLM(api_key=google_api_key)
+
+    gr.Interface(
+        fn=palm.fn,
+        inputs=palm.inputs,
+        outputs=palm.outputs,
+        title="MAIA (PaLM Only)",
+    ).queue().launch(
+        server_name=server_name,
+        server_port=server_port,
+        share=share_gradio,
+    )
+
 def main(
     server_name: str = "0.0.0.0",
     server_port: int = 36000,
