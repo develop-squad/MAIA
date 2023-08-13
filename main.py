@@ -163,4 +163,5 @@ def main(
     )
 
 if __name__ == "__main__":
+    gr.close_all()
     fire.Fire(main)
