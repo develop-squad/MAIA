@@ -185,6 +185,6 @@ class Alpaca(Model):
         return [
             gr.components.Textbox(
                 lines=5,
-                label="Output",
+                label="Response",
             )
         ]
