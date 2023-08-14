@@ -16,8 +16,10 @@ class WhisperX(Model):
         batch_size: int = 16,
     ):
         # 1. Transcribe with original whisper (batched)
-        self.model = whisperx.load_model(model_name, device, device_index=device_index, compute_type=compute_type)
         self.device = device
+        self.device_index = device_index
+        self.model_name = model_name
+        self.compute_type = compute_type
         self.batch_size = batch_size
 
         self.setup_interface(self.transcribe, self.get_inputs(), self.get_outputs())
@@ -29,10 +31,11 @@ class WhisperX(Model):
     ):
         # 1. Transcribe with original whisper (batched)
         audio = whisperx.load_audio(audio_file)
-        result = self.model.transcribe(audio, batch_size=self.batch_size, language=language)
+        model = whisperx.load_model(self.model_name, self.device, device_index=self.device_index, compute_type=self.compute_type)
+        result = model.transcribe(audio, batch_size=self.batch_size, language=language)
 
         # delete model if low on GPU resources
-        del self.model
+        del model
         gc.collect()
         torch.cuda.empty_cache()
 
