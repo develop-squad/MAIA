@@ -1,8 +1,7 @@
 import gc
 import gradio as gr
 import torch
-
-from . import whisperx
+import whisperx
 
 from utils.model import Model
 
