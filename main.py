@@ -7,7 +7,7 @@ load_dotenv()
 launcher = Launcher()
 
 def run_chatgpt(openai_api_key: str = "", **kwargs):
-    from chatgpt.core import ChatGPT
+    from models.chatgpt.core import ChatGPT
 
     chatgpt = ChatGPT(api_key=openai_api_key)
 
@@ -15,7 +15,7 @@ def run_chatgpt(openai_api_key: str = "", **kwargs):
     launcher.launch_gradio(chatgpt, config)
 
 def run_whisperx(**kwargs):
-    from whisperx.core import WhisperX
+    from models.whisperx.core import WhisperX
 
     whisper = WhisperX(
         device=launcher.get_device(),
@@ -28,7 +28,7 @@ def run_whisperx(**kwargs):
     launcher.launch_gradio(whisper, config)
 
 def run_alpaca(**kwargs):
-    from alpaca.core import Alpaca
+    from models.alpaca.core import Alpaca
     
     alpaca = Alpaca(
         device=launcher.get_device(),
@@ -41,7 +41,7 @@ def run_alpaca(**kwargs):
     launcher.launch_gradio(alpaca, config)
 
 def run_bard(bard_api_key: str = "", **kwargs):
-    from bard.core import Bard
+    from models.bard.core import Bard
     
     bard = Bard(api_key=bard_api_key)
 
@@ -49,7 +49,7 @@ def run_bard(bard_api_key: str = "", **kwargs):
     launcher.launch_gradio(bard, config)
 
 def run_palm(google_api_key: str = "", **kwargs):
-    from palm.core import PaLM
+    from models.palm.core import PaLM
     
     palm = PaLM(api_key=google_api_key)
 
@@ -57,8 +57,8 @@ def run_palm(google_api_key: str = "", **kwargs):
     launcher.launch_gradio(palm, config)
 
 def main(**kwargs):
-    from whisperx.core import WhisperX
-    from alpaca.core import Alpaca
+    from models.whisperx.core import WhisperX
+    from models.alpaca.core import Alpaca
     
     whisper = WhisperX(
         device=launcher.get_device(),
