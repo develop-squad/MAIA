@@ -1,54 +1,57 @@
 import os
-
-import google.generativeai as palm
 import gradio as gr
+import google.generativeai as palm
+from utils.model import Model
 
-class PaLM:
+class PaLM(Model):
     def __init__(
         self,
         api_key: str = "",
         model: str = "chat-bison-001",
     ):
-        api_key = api_key or os.getenv("GOOGLE_API_KEY", "")
+        self.api_key = api_key or os.getenv("GOOGLE_API_KEY", "")
         assert (
-            api_key
+            self.api_key
         ), "Please specify an --google_api_key"
-        palm.configure(api_key=api_key)
+        palm.configure(api_key=self.api_key)
 
         self.messages = []
 
-        def prompt(
-            input,
-            temperature=1.0,
-            candidate_count=1,
-            top_p=1.0,
-            top_k=None,
-        ):
-            self.messages.append({
-                "role": "user",
-                "content": input,
-            })
+        self.setup_interface(self.prompt, self.get_inputs(), self.get_outputs())
 
-            chat = palm.chat(
-                model=model,
-                messages=self.messages,
-                temperature=temperature,
-                candidate_count=candidate_count,
-                top_p=top_p,
-                top_k=top_k,
-            )
-            role = chat.messages[-1]['role']
-            reply = chat.messages[-1]['content']
+    def prompt(
+        self,
+        input,
+        temperature=1.0,
+        candidate_count=1,
+        top_p=1.0,
+        top_k=None,
+    ):
+        self.messages.append({
+            "role": "user",
+            "content": input,
+        })
 
-            self.messages.append({
-                "role": role,
-                "content": reply
-            })
+        chat = palm.chat(
+            model=self.model,
+            messages=self.messages,
+            temperature=temperature,
+            candidate_count=candidate_count,
+            top_p=top_p,
+            top_k=top_k,
+        )
+        role = chat.messages[-1]['role']
+        reply = chat.messages[-1]['content']
 
-            return reply
+        self.messages.append({
+            "role": role,
+            "content": reply
+        })
+
+        return reply
     
-        self.fn = prompt
-        self.inputs = [
+    def get_inputs(self):
+        return [
             gr.components.Textbox(
                 lines=2,
                 label="Input",
@@ -67,7 +70,9 @@ class PaLM:
                 minimum=1, maximum=8, step=1, default=1, label="Candidate Count"
             ),
         ]
-        self.outputs = [
+    
+    def get_outputs(self):
+        return [
             gr.components.Textbox(
                 lines=5,
                 label="Output",
