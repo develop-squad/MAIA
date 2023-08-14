@@ -16,8 +16,8 @@ class Launcher:
         self.SSL_CERT_PATH = os.environ.get("SSL_CERT_PATH")
         self.SSL_KEY_PATH = os.environ.get("SSL_KEY_PATH")
         
-        if not self.SSL_CERT_PATH or not self.SSL_KEY_PATH:
-            raise ValueError("Please set the SSL_CERT_PATH and SSL_KEY_PATH environment variables.")
+        # if not self.SSL_CERT_PATH or not self.SSL_KEY_PATH:
+        #     raise ValueError("Please set the SSL_CERT_PATH and SSL_KEY_PATH environment variables.")
     
     @staticmethod
     def get_device():

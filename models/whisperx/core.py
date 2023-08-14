@@ -26,11 +26,14 @@ class WhisperX(Model):
         
     def transcribe(
         self,
+        audio_from_mic: str,
         audio_file: str,
         language: str = "en",
     ):
+        audio_input = audio_from_mic or audio_file
+
         # 1. Transcribe with original whisper (batched)
-        audio = whisperx.load_audio(audio_file)
+        audio = whisperx.load_audio(audio_input)
         model = whisperx.load_model(self.model_name, self.device, device_index=self.device_index, compute_type=self.compute_type)
         result = model.transcribe(audio, batch_size=self.batch_size, language=language)
 
@@ -55,9 +58,19 @@ class WhisperX(Model):
     def get_inputs(self):
         return [
             gr.components.Audio(
-                label="STT Model",
+                label="Record",
                 source="microphone",
                 type="filepath",
+            ),
+            gr.components.Audio(
+                label="Upload Audio File",
+                source="upload",
+                type="filepath",
+            ),
+            gr.components.Radio(
+                label="Language",
+                choices=["en"],
+                value="en",
             ),
         ]
 
