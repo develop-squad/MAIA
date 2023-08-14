@@ -183,7 +183,7 @@ class Alpaca(Model):
     
     def get_outputs(self):
         return [
-            gr.inputs.Textbox(
+            gr.components.Textbox(
                 lines=5,
                 label="Output",
             )

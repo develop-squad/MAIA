@@ -6,6 +6,7 @@ class Pipeline:
         transcribe_model: Model,
         generate_model: Model,
     ):
+        self.fn = self
         self.transcribe = transcribe_model.fn
         self.generate = generate_model.fn
         self.inputs = transcribe_model.inputs

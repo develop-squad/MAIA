@@ -60,7 +60,7 @@ class WhisperX(Model):
 
     def get_outputs(self):
         return [
-            gr.inputs.Textbox(
+            gr.components.Textbox(
                 label="Output",
             )
         ]
