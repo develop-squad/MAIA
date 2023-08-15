@@ -6,7 +6,7 @@ black
 black[jupyter]
 datasets
 fire
-git+https://github.com/huggingface/peft.git
+peft
 transformers>=4.28.0
 sentencepiece
 gradio
@@ -17,6 +17,7 @@ ffmpeg-python>=0.2
 pandas
 setuptools>=65
 nltk
-git+https://github.com/pyannote/pyannote-audio@11b56a137a578db9335efc00298f6ec1932e6317
+python-dotenv
+whisperx @ git+https://github.com/m-bain/whisperX.git@66da4b3eb715bad14d0271e25ce9b373d3541114
 openai
 google-generativeai
