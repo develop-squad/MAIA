@@ -56,20 +56,20 @@ def run_palm(google_api_key: str = "", **kwargs):
     config = LaunchConfig(**kwargs, title="MAIA (PaLM Only)")
     launcher.launch_gradio(palm, config)
     
-def run(save_path: str = "tts_result.mp3", **kwargs):
-    from models.papagotts.core import PapagoTTS
+def run_papago(save_path: str = "tts_result.mp3", **kwargs):
+    from models.papago.core import Papago
     
-    papago_tts = PapagoTTS(
+    papago = Papago(
         save_path=save_path
     )
     
     config = LaunchConfig(**kwargs, title="MAIA (PapagoTTS Only)")
-    launcher.launch_gradio(papago_tts, config)
+    launcher.launch_gradio(papago, config)
 
 def main(**kwargs):
     from models.whisperx.core import WhisperX
     from models.alpaca.core import Alpaca
-    from models.papagotts.core import PapagoTTS
+    from models.papago.core import Papago
     
     whisper = WhisperX(
         device=launcher.get_device(),
@@ -85,14 +85,14 @@ def main(**kwargs):
         lora_weights="tloen/alpaca-lora-7b",
     )
     
-    papago_tts = PapagoTTS(
+    papago = Papago(
         save_path="tts_result.mp3"
     )
 
     pipeline = Pipeline(
         transcribe_model=whisper,
         generate_model=alpaca,
-        tts_model=papago_tts,
+        synthesize_model=papago,
     )
 
     config = LaunchConfig(**kwargs)

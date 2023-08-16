@@ -3,7 +3,7 @@ from navertts import NaverTTS
 
 from utils.model import Model
 
-class PapagoTTS(Model):
+class Papago(Model):
     def __init__(self, save_path):
         self.save_path = save_path
         
@@ -14,8 +14,8 @@ class PapagoTTS(Model):
         text: str,
         language: str = "en",
     ):
-        tts = NaverTTS(text, lang=language)
-        tts.save(self.save_path)
+        speech = NaverTTS(text, lang=language)
+        speech.save(self.save_path)
         
         return self.save_path
         
@@ -27,8 +27,7 @@ class PapagoTTS(Model):
     def get_outputs(self):
         return [
             gr.components.Audio(
-                label="TTS Audio File",
-                source="upload",
+                label="Speech",
                 type="filepath",
             ),
         ]
