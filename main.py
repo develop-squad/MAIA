@@ -56,12 +56,10 @@ def run_palm(google_api_key: str = "", **kwargs):
     config = LaunchConfig(**kwargs, title="MAIA (PaLM Only)")
     launcher.launch_gradio(palm, config)
     
-def run_papago(save_path: str = "tts_result.mp3", **kwargs):
+def run_papago(**kwargs):
     from models.papago.core import Papago
     
-    papago = Papago(
-        save_path=save_path
-    )
+    papago = Papago()
     
     config = LaunchConfig(**kwargs, title="MAIA (PapagoTTS Only)")
     launcher.launch_gradio(papago, config)
