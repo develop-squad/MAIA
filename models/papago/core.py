@@ -1,12 +1,11 @@
 import gradio as gr
+import tempfile
 from navertts import NaverTTS
 
 from utils.model import Model
 
 class Papago(Model):
-    def __init__(self, save_path):
-        self.save_path = save_path
-        
+    def __init__(self):
         self.setup_interface(self.transcribe, self.get_inputs(), self.get_outputs())
         
     def transcribe(
@@ -14,10 +13,11 @@ class Papago(Model):
         text: str,
         language: str = "en",
     ):
+        audio_filename = tempfile.NamedTemporaryFile(delete=True, suffix=".mp3").name
         speech = NaverTTS(text, lang=language)
-        speech.save(self.save_path)
+        speech.save(audio_filename)
         
-        return self.save_path
+        return audio_filename
         
     def get_inputs(self):
         return [

@@ -85,9 +85,7 @@ def main(**kwargs):
         lora_weights="tloen/alpaca-lora-7b",
     )
     
-    papago = Papago(
-        save_path="tts_result.mp3"
-    )
+    papago = Papago()
 
     pipeline = Pipeline(
         transcribe_model=whisper,
