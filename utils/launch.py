@@ -10,6 +10,7 @@ class LaunchConfig:
     server_name: str = "0.0.0.0"
     server_port: int = 443
     share_gradio: bool = False
+    http: bool = False
 
 class Launcher:
     def __init__(self):
@@ -39,7 +40,12 @@ class Launcher:
         model: Model,
         config: LaunchConfig
     ) -> tuple:
+        if config.http:
+            self.SSL_CERT_PATH = None
+            self.SSL_KEY_PATH = None
+        
         gr.close_all()
+
         return gr.Interface(
             fn=model.fn,
             inputs=model.inputs,
