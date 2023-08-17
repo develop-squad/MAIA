@@ -3,6 +3,7 @@ import torch
 import gradio as gr
 from dataclasses import dataclass
 from .model import Model
+from .form import Form
 
 @dataclass
 class LaunchConfig:
@@ -14,10 +15,10 @@ class LaunchConfig:
 
 class Launcher:
     def __init__(self):
-        self.SSL_CERT_PATH = os.environ.get("SSL_CERT_PATH")
-        self.SSL_KEY_PATH = os.environ.get("SSL_KEY_PATH")
+        self.__SSL_CERT_PATH = os.environ.get("SSL_CERT_PATH")
+        self.__SSL_KEY_PATH = os.environ.get("SSL_KEY_PATH")
         
-        # if not self.SSL_CERT_PATH or not self.SSL_KEY_PATH:
+        # if not self.__SSL_CERT_PATH or not self.__SSL_KEY_PATH:
         #     raise ValueError("Please set the SSL_CERT_PATH and SSL_KEY_PATH environment variables.")
     
     @staticmethod
@@ -38,23 +39,26 @@ class Launcher:
     def launch_gradio(
         self,
         model: Model,
-        config: LaunchConfig
+        config: LaunchConfig,
+        form: type[Form] = Form,
     ) -> tuple:
         if config.http:
-            self.SSL_CERT_PATH = None
-            self.SSL_KEY_PATH = None
+            self.__SSL_CERT_PATH = None
+            self.__SSL_KEY_PATH = None
         
         gr.close_all()
 
-        return gr.Interface(
-            fn=model.fn,
-            inputs=model.inputs,
-            outputs=model.outputs,
+        if form is None:
+            form = Form
+        instance = form(
+            model=model,
             title=config.title,
-        ).queue().launch(
+        ).get_form()
+
+        return instance.queue().launch(
             server_name=config.server_name,
             server_port=config.server_port,
             share=config.share_gradio,
-            ssl_certfile=self.SSL_CERT_PATH,
-            ssl_keyfile=self.SSL_KEY_PATH,
+            ssl_certfile=self.__SSL_CERT_PATH,
+            ssl_keyfile=self.__SSL_KEY_PATH,
         )

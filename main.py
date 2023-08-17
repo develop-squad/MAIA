@@ -68,6 +68,7 @@ def main(**kwargs):
     from models.whisperx.core import WhisperX
     from models.alpaca.core import Alpaca
     from models.papago.core import Papago
+    from conversation.form import ConversationForm
     
     whisper = WhisperX(
         device=launcher.get_device(),
@@ -92,7 +93,7 @@ def main(**kwargs):
     )
 
     config = LaunchConfig(**kwargs)
-    launcher.launch_gradio(pipeline, config)
+    launcher.launch_gradio(pipeline, config, ConversationForm)
 
 if __name__ == "__main__":
     fire.Fire(main)
