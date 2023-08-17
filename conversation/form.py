@@ -8,6 +8,8 @@ class ConversationForm(Form):
     
     def _create_form(self) -> gr.Blocks:
         with gr.Blocks(css="#chatbot") as form:
+            gr.HTML(f"<h1 style=\"text-align: center;\">{self.title}</h1>")
+            
             chatbot = gr.Chatbot(elem_id="chatbot")
 
             with gr.Row():
@@ -63,12 +65,21 @@ class ConversationForm(Form):
         input = history[-1][0]
         print(f"User: {input}")
 
-        response = "I can't process this type of input."
         if isinstance(input, str):
             response = self.model.fn(text_input=input)
         elif isinstance(input, tuple):
             response = self.model.fn(audio_file=input[0])
-        print(f"Assistant: {response[1]}")
+        else:
+            response = self.model.fn(
+                text_input=input,
+                forced_response="I can't process this type of input.",
+            )
+        transcript, message, speech = response
+        print(f"Assistant: {message}")
 
-        history[-1] = (response[0], (response[2], response[1])) # (transcript, (speech, response))
+        speech_data = f"data:audio/wav;base64,{speech}"
+        output = f"<audio controls autoplay src=\"{speech_data}\" type=\"audio/wav\"></audio>"
+        output += message
+
+        history[-1] = (transcript, output)
         return history

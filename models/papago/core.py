@@ -1,5 +1,6 @@
 import gradio as gr
 import tempfile
+import base64
 from navertts import NaverTTS
 
 from utils.model import Model
@@ -13,11 +14,14 @@ class Papago(Model):
         text: str,
         language: str = "en",
     ):
-        audio_filename = tempfile.NamedTemporaryFile(delete=True, suffix=".mp3").name
+        audio_file = tempfile.NamedTemporaryFile(delete=True, suffix=".mp3")
+
         speech = NaverTTS(text, lang=language)
-        speech.save(audio_filename)
-        
-        return audio_filename
+        speech.save(audio_file.name)
+
+        speech_base64 = self.__audio_to_base64(audio_file.name)
+
+        return speech_base64
         
     def get_inputs(self):
         return [
@@ -31,3 +35,8 @@ class Papago(Model):
                 type="filepath",
             ),
         ]
+    
+    def __audio_to_base64(self, audio_filepath: str) -> str:
+        with open(audio_filepath, "rb") as audio_file:
+            audio_encoded = base64.b64encode(audio_file.read())
+        return audio_encoded.decode("utf-8")
