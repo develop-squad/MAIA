@@ -1,6 +1,5 @@
 import gradio as gr
 from utils.form import Form
-from utils.pipeline import Pipeline
 
 class ConversationForm(Form):
     def __init__(self, model, title):
@@ -14,27 +13,30 @@ class ConversationForm(Form):
 
             with gr.Row():
                 with gr.Column(scale=0.85):
-                    # audio_record = gr.Audio(
-                    #     label="Record",
-                    #     source="microphone",
-                    #     type="filepath",
-                    # )
-                    text_input = gr.Textbox(
+                    audio_record = gr.Audio(
                         show_label=False,
-                    ).style(container=False)
+                        source="microphone",
+                        type="filepath",
+                    )
                 with gr.Column(scale=0.15, min_width=0):
                     audio_file = gr.UploadButton(
                         "📁",
                         file_types=["audio"],
                     )
+            with gr.Row():
+                text_input = gr.Textbox(show_label=False)
+                text_input.style(container=False)
             
             text_input.submit(
-                fn=self.__add_text,
+                self.__add_text,
                 inputs=[chatbot, text_input],
                 outputs=[chatbot, text_input],
                 queue=False,
             ).then(
-                self.__process, chatbot, chatbot
+                self.__process,
+                inputs=chatbot,
+                outputs=chatbot,
+                queue=True
             ).then(
                 lambda: gr.update(interactive=True),
                 inputs=None,
@@ -42,13 +44,38 @@ class ConversationForm(Form):
                 queue=False
             )
 
-            audio_file.upload(
-                fn=self.__add_audio,
-                inputs=[chatbot, audio_file],
+            audio_record.change(
+                self.__add_record,
+                inputs=[chatbot, audio_record],
                 outputs=[chatbot],
                 queue=False,
             ).then(
-                self.__process, chatbot, chatbot
+                self.__process,
+                inputs=chatbot,
+                outputs=chatbot,
+                queue=True
+            ).then(
+                lambda: gr.update(interactive=True),
+                inputs=None,
+                outputs=[audio_record],
+                queue=False
+            )
+
+            audio_file.upload(
+                self.__add_audio,
+                inputs=[chatbot, audio_file],
+                outputs=[chatbot, audio_file],
+                queue=True,
+            ).then(
+                self.__process,
+                inputs=chatbot,
+                outputs=chatbot,
+                queue=True
+            ).then(
+                lambda: gr.update(interactive=True),
+                inputs=None,
+                outputs=[audio_file],
+                queue=False
             )
         
         return form
@@ -57,13 +84,18 @@ class ConversationForm(Form):
         history = history + [(text_input, None)]
         return history, gr.update(value="", interactive=False)
     
+    def __add_record(self, history, audio_record):
+        if not audio_record:
+            return history
+        history = history + [((audio_record,), None)]
+        return history
+
     def __add_audio(self, history, audio_file):
         history = history + [((audio_file.name,), None)]
-        return history
+        return history, gr.update(value="", interactive=False)
     
     def __process(self, history):
         input = history[-1][0]
-        print(f"User: {input}")
 
         if isinstance(input, str):
             response = self.model.fn(text_input=input)
@@ -75,7 +107,8 @@ class ConversationForm(Form):
                 forced_response="I can't process this type of input.",
             )
         transcript, message, speech = response
-        print(f"Assistant: {message}")
+        print(f"- User: {transcript}")
+        print(f"- Assistant: {message}")
 
         speech_data = f"data:audio/wav;base64,{speech}"
         output = f"<audio controls autoplay src=\"{speech_data}\" type=\"audio/wav\"></audio>"

@@ -82,6 +82,7 @@ def main(**kwargs):
         load_8bit=True,
         base_model="decapoda-research/llama-7b-hf",
         lora_weights="tloen/alpaca-lora-7b",
+        prompt_template="maia",
     )
     
     papago = Papago()
