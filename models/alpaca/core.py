@@ -77,6 +77,9 @@ class Alpaca(Model):
         self.model.eval()
         if torch.__version__ >= "2" and sys.platform != "win32":
             self.model = torch.compile(self.model)
+        
+        self.role = "assistant"
+        self.messages = []
 
         self.setup_interface(self.evaluate, self.get_inputs(), self.get_outputs())
         
@@ -92,7 +95,11 @@ class Alpaca(Model):
         stream_output=False,
         **kwargs,
     ):
-        prompt = self.prompter.generate_prompt(instruction, input)
+        self.messages.append(("user", instruction))
+
+        context = "\n".join([": ".join(message) for message in self.messages])
+        prompt = self.prompter.generate_prompt(f"{context}\n{self.role}: ", input)
+        # prompt = self.prompter.generate_prompt(instruction, input)
         inputs = self.tokenizer(prompt, return_tensors="pt")
         input_ids = inputs["input_ids"].to(self.device)
         generation_config = GenerationConfig(
@@ -153,7 +160,11 @@ class Alpaca(Model):
             )
         s = generation_output.sequences[0]
         output = self.tokenizer.decode(s)
-        yield self.prompter.get_response(output)
+        response = self.prompter.get_response(output)
+
+        self.messages.append((self.role, "".join(response)))
+
+        yield response
         
     def get_inputs(self):
         return [

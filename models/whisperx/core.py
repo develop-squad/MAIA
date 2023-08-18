@@ -25,10 +25,14 @@ class WhisperX(Model):
         
     def transcribe(
         self,
-        audio_from_mic: str,
-        audio_file: str,
+        audio_from_mic: str = None,
+        audio_file: str = None,
+        text_input: str = "",
         language: str = "en",
     ):
+        if not audio_from_mic and not audio_file and text_input:
+            return text_input
+
         audio_input = audio_from_mic or audio_file
 
         # 1. Transcribe with original whisper (batched)
@@ -65,6 +69,10 @@ class WhisperX(Model):
                 label="Upload Audio File",
                 source="upload",
                 type="filepath",
+            ),
+            gr.components.Textbox(
+                lines=2,
+                label="Text Input",
             ),
             gr.components.Radio(
                 label="Language",

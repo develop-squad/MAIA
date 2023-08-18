@@ -6,10 +6,12 @@ class Pipeline(Model):
         transcribe_model: Model,
         generate_model: Model,
         synthesize_model: Model,
+        forced_response: str = "",
     ):
         self.transcribe = transcribe_model.fn
         self.generate = generate_model.fn
         self.synthesize = synthesize_model.fn
+        self.forced_response = forced_response
 
         self.setup_interface(
             fn=self,
@@ -23,6 +25,12 @@ class Pipeline(Model):
     
     def __call__(self, *args, **kwargs):
         transcript = self.transcribe(*args, **kwargs)
-        response = "".join(self.generate(transcript))
-        speech = self.synthesize(response)
-        return transcript, response, speech
+
+        if self.forced_response:
+            message = self.forced_response
+        else:
+            message = "".join(self.generate(transcript))
+
+        speech = self.synthesize(message)
+
+        return transcript, message, speech
