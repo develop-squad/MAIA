@@ -7,7 +7,7 @@ class PaLM(Model):
     def __init__(
         self,
         api_key: str = "",
-        model: str = "chat-bison-001",
+        model: str = "models/chat-bison-001",
     ):
         self.api_key = api_key or os.getenv("GOOGLE_API_KEY", "")
         assert (
@@ -15,6 +15,7 @@ class PaLM(Model):
         ), "Please specify an --google_api_key"
         palm.configure(api_key=self.api_key)
 
+        self.model = palm.get_model(model)
         self.messages = []
 
         self.setup_interface(self.prompt, self.get_inputs(), self.get_outputs())
@@ -22,13 +23,12 @@ class PaLM(Model):
     def prompt(
         self,
         input,
-        temperature=1.0,
-        candidate_count=1,
-        top_p=1.0,
-        top_k=None,
+        temperature=0.25,
+        top_p=0.95,
+        top_k=40,
     ):
         self.messages.append({
-            "role": "user",
+            "author": "user",
             "content": input,
         })
 
@@ -36,15 +36,14 @@ class PaLM(Model):
             model=self.model,
             messages=self.messages,
             temperature=temperature,
-            candidate_count=candidate_count,
             top_p=top_p,
             top_k=top_k,
         )
-        role = chat.messages[-1]['role']
+        author = chat.messages[-1]['author']
         reply = chat.messages[-1]['content']
 
         self.messages.append({
-            "role": role,
+            "author": author,
             "content": reply
         })
 
@@ -58,16 +57,13 @@ class PaLM(Model):
                 placeholder="Tell me about PaLM.",
             ),
             gr.components.Slider(
-                minimum=0, maximum=2, value=1, label="Temperature"
+                minimum=0, maximum=2, value=0.25, label="Temperature"
             ),
             gr.components.Slider(
-                minimum=0, maximum=1, value=1, label="Top p"
+                minimum=0, maximum=1, value=0.95, label="Top p"
             ),
             gr.components.Slider(
-                minimum=0, maximum=100, step=1, default=None, label="Top k"
-            ),
-            gr.components.Slider(
-                minimum=1, maximum=8, step=1, default=1, label="Candidate Count"
+                minimum=0, maximum=100, step=1, value=40, label="Top k"
             ),
         ]
     
