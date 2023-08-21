@@ -1,6 +1,7 @@
 import os
 import openai
 import gradio as gr
+import typing
 from utils.model import Model
 
 class ChatGPT(Model):
@@ -8,6 +9,7 @@ class ChatGPT(Model):
         self,
         api_key: str = "",
         model: str = "gpt-3.5-turbo",
+        context: bool = True,
     ):
         super().__init__()
 
@@ -18,6 +20,7 @@ class ChatGPT(Model):
 
         self.model = model
         self.messages = []
+        self.context = context
 
         self.setup_interface(self.prompt, self.get_inputs(), self.get_outputs())
 
@@ -30,10 +33,15 @@ class ChatGPT(Model):
         presence_penalty=0, # -2.0~2.0
         stop=["\n"], # up to 4 sequences
     ):
-        self.messages.append({
+        message = {
             "role": "user",
             "content": input,
-        })
+        }
+
+        if self.context:
+            self.messages.append(message)
+        else:
+            self.messages = message
 
         chat = openai.ChatCompletion.create(
             model=self.model,
@@ -47,10 +55,11 @@ class ChatGPT(Model):
         role = chat.choices[0].message.role
         reply = chat.choices[0].message.content
 
-        self.messages.append({
-            "role": role,
-            "content": reply,
-        })
+        if self.context:
+            self.messages.append({
+                "role": role,
+                "content": reply,
+            })
 
         return reply # Without streaming
         
