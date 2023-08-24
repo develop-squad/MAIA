@@ -1,7 +1,7 @@
 import os
 import openai
 import gradio as gr
-import typing
+import math
 from utils.model import Model
 
 class ChatGPT(Model):
@@ -41,7 +41,7 @@ class ChatGPT(Model):
         if self.context:
             self.messages.append(message)
         else:
-            self.messages = message
+            self.messages = [message]
 
         chat = openai.ChatCompletion.create(
             model=self.model,
