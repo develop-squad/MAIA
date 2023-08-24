@@ -21,4 +21,4 @@ python-dotenv
 whisperx @ git+https://github.com/m-bain/whisperX.git@66da4b3eb715bad14d0271e25ce9b373d3541114
 openai
 google-generativeai
-NaverTTS
+google-cloud-texttospeech
