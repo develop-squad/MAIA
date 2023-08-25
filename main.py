@@ -56,7 +56,7 @@ def run_palm(google_api_key: str = "", **kwargs):
     config = LaunchConfig(**kwargs, title="MAIA (PaLM Only)")
     launcher.launch_gradio(palm, config)
     
-def run_papago(google_tts_api_key: str = "", **kwargs):
+def run_googletts(google_tts_api_key: str = "", **kwargs):
     from models.googletts.core import GoogleTTS
     
     papago = GoogleTTS(api_key=google_tts_api_key)
