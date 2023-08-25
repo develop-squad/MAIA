@@ -29,7 +29,7 @@ class GoogleTTS(Model):
 
         voice = texttospeech.VoiceSelectionParams(
             language_code=language_code,
-            name=f"{language_code}-Standard-C",
+            name=f"en-US-Wavenet-G",
             ssml_gender=texttospeech.SsmlVoiceGender.FEMALE,
         )
 
