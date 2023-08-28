@@ -1,13 +1,19 @@
 import json
 import os.path as osp
+from dataclasses import dataclass
 from utils.model import Model
 from conversation.retriever import BiEncoderRetriever
+
+@dataclass
+class PromptConfig:
+    remove_cot: bool = False
 
 class Prompter:
     def __init__(self, model: Model) -> None:
         self.model = model
 
-        self.templates = self._load_templates("prompts.json")
+        self.config = PromptConfig()
+        self.templates = self._load_templates("templates.json")
         self.examples = self._load_templates("examples.json")
         self.responses = {
             "clarifier": None,
@@ -16,7 +22,7 @@ class Prompter:
         }
         self.session = {
             "history": [],
-            "history_summary": None,
+            "history_summaries": ["They are starting conversation."],
             "prefix": None,
             "suffix": None,
         }
@@ -24,6 +30,9 @@ class Prompter:
         self.retriever = BiEncoderRetriever()
     
     def prompt(self, input:str) -> str:
+        #question = self.clarify(input, 1)
+        knowledge, question = self.extract(input, 1)
+        retrieval = self.retrieve(question)
         return ""
     
     def clarify(
@@ -33,10 +42,22 @@ class Prompter:
     ) -> str:
         if num_examples is None:
             num_examples = len(self.examples["clarifier"])
-        prompt = self.templates["clarifier"].format(
+        input = self.templates["clarifier"].format(
             examples="\n".join(self.examples["clarifier"][:num_examples]),
             input=input,
         )
+        print("\n  ** Clarifier Input **")
+        print(input)
+
+        clarified_question = "".join(self.model.fn(
+            input,
+            temperature=0.3,
+            stop=[],
+        ))
+        print("\n ** Clarifier Output **")
+        print(clarified_question)
+        return clarified_question
+    
         print("\n** Clarifier **")
         print(prompt)
 
@@ -46,12 +67,32 @@ class Prompter:
         ))
         return result
     
-    def retrieve(self, input: str) -> str:
+    def retrieve(self, question: str) -> str:
         retrieved_summaries = self.retriever.retrieve_top_summaries(
-            input, self.session['history_summary']
+            question, self.session["history_summaries"]
         )
-        summaries = "\n" + "\n".join(retrieved_summaries)
-        return summaries
+
+        if not self.config.remove_cot:
+            numbered_summaries = [f"{i+1} " + summary for i, summary in enumerate(retrieved_summaries)]
+            summaries = "\n".join(numbered_summaries)
+        else:
+            summaries = "\n".join(retrieved_summaries)
+
+        # Few-shot retrieval
+        input = self.templates["memory_processor"].format(
+            summaries=summaries,
+            question=question,
+        )
+        print("\n  ** Retrieval Input **")
+        print(input)
+
+        completion = "".join(self.model.fn(
+            input,
+            temperature=0.3,
+        ))
+        print("\n  ** Retrieval Output **")
+        print(completion)
+        return completion
 
     def _load_templates(self, filename: str) -> dict:
         try:
