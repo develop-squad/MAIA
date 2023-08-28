@@ -56,18 +56,18 @@ def run_palm(google_api_key: str = "", **kwargs):
     config = LaunchConfig(**kwargs, title="MAIA (PaLM Only)")
     launcher.launch_gradio(palm, config)
     
-def run_papago(**kwargs):
-    from models.papago.core import Papago
+def run_googletts(google_tts_api_key: str = "", **kwargs):
+    from models.googletts.core import GoogleTTS
     
-    papago = Papago()
+    papago = GoogleTTS(api_key=google_tts_api_key)
     
-    config = LaunchConfig(**kwargs, title="MAIA (PapagoTTS Only)")
+    config = LaunchConfig(**kwargs, title="MAIA (GoogleTTS Only)")
     launcher.launch_gradio(papago, config)
 
 def main(**kwargs):
     from models.whisperx.core import WhisperX
     from models.alpaca.core import Alpaca
-    from models.papago.core import Papago
+    from models.googletts.core import GoogleTTS
     from conversation.form import ConversationForm
     
     whisper = WhisperX(
@@ -85,12 +85,12 @@ def main(**kwargs):
         prompt_template="maia",
     )
     
-    papago = Papago()
+    googletts = GoogleTTS()
 
     pipeline = Pipeline(
         transcribe_model=whisper,
         generate_model=alpaca,
-        synthesize_model=papago,
+        synthesize_model=googletts,
     )
 
     config = LaunchConfig(**kwargs)
