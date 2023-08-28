@@ -58,14 +58,38 @@ class Prompter:
         print(clarified_question)
         return clarified_question
     
-        print("\n** Clarifier **")
-        print(prompt)
+    def extract(
+        self,
+        input: str,
+        num_examples: int = None,
+    ) -> str:
+        if num_examples is None:
+            num_examples = len(self.examples["extractor"])
+        input = self.templates["extractor"].format(
+            examples="\n".join(self.examples["extractor"][:num_examples]),
+            input=input,
+        )
+        print("\n  ** Extractor Input **")
+        print(input)
 
-        result = "".join(self.model.fn(
-            prompt,
+        response = "".join(self.model.fn(
+            input,
             temperature=0.3,
+            stop=[],
         ))
-        return result
+
+        knowledge = []
+        question = ""
+        sections = [section.strip() for section in response.split("##") if section.strip()]
+        for section in sections:
+            if section.startswith("Knowledge"):
+                knowledge = [line.strip("- ").strip() for line in section.replace("Knowledge", "").strip().split("\n") if line.strip()]
+            elif section.startswith("Question"):
+                question = section.replace("Question", "").strip()
+
+        print("\n ** Extractor Output **")
+        print(knowledge, question)
+        return knowledge, question
     
     def retrieve(self, question: str) -> str:
         retrieved_summaries = self.retriever.retrieve_top_summaries(
