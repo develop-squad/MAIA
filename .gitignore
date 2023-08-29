@@ -18,3 +18,4 @@ whisperx.egg-info/
 test.sh
 .env
 logs/
+.experiments/
