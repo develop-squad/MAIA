@@ -127,7 +127,6 @@ class Prompter:
             input,
             temperature=0.7,
         ))
-
         return completion
 
     def _load_templates(self, filename: str) -> dict:
