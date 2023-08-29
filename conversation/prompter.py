@@ -9,7 +9,10 @@ class PromptConfig:
     remove_cot: bool = False
 
 class Prompter:
-    def __init__(self, model: Model) -> None:
+    def __init__(
+        self,
+        model: Model,
+    ) -> None:
         self.model = model
 
         self.config = PromptConfig()
@@ -29,12 +32,16 @@ class Prompter:
 
         self.retriever = BiEncoderRetriever()
     
-    def prompt(self, input:str) -> str:
+    def prompt(
+        self,
+        input:str,
+    ) -> str:
         #question = self.clarify(input, 1)
         knowledge, question = self.extract(input, 1)
         retrieval = self.retrieve(question)
         reasoning = self.reasoning(question, knowledge, retrieval)
         response = self.generate(question, reasoning)
+        summary = self.summarize(question, knowledge, response)
         return response
     
     def clarify(
@@ -86,7 +93,10 @@ class Prompter:
 
         return knowledge, question
     
-    def retrieve(self, question: str) -> str:
+    def retrieve(
+        self,
+        question: str,
+    ) -> str:
         if len(self.session["history_summaries"]) == 0:
             return ""
 
@@ -101,7 +111,13 @@ class Prompter:
             summaries = "\n".join(retrieved_summaries)
         return summaries
 
-    def reasoning(self, question: str, knowledge: str, retrieval: str, num_examples: int = None) -> str:
+    def reasoning(
+        self,
+        question: str,
+        knowledge: str,
+        retrieval: str,
+        num_examples: int = None,
+    ) -> str:
         if num_examples is None:
             num_examples = len(self.examples["extractor"])
         input = self.templates["reasoner"].format(
@@ -117,7 +133,11 @@ class Prompter:
         ))
         return completion
     
-    def generate(self, question: str, reasoning: str) -> str:
+    def generate(
+        self,
+        question: str,
+        reasoning: str,
+    ) -> str:
         input = self.templates["generator"].format(
             question=question,
             reasoning=reasoning,
@@ -128,8 +148,29 @@ class Prompter:
             temperature=0.7,
         ))
         return completion
+    
+    def summarize(
+        self,
+        question: str,
+        knowledge: str,
+        answer: str,
+    ) -> str:
+        input = self.templates["summarizer"].format(
+            question=question,
+            knowledge=knowledge,
+            answer=answer,
+        )
 
-    def _load_templates(self, filename: str) -> dict:
+        completion = "".join(self.model.fn(
+            input,
+            temperature=0.3,
+        ))
+        return completion
+
+    def _load_templates(
+        self,
+        filename: str,
+    ) -> dict:
         try:
             with open(osp.join("conversation", "configs", filename), "r") as file:
                 return json.load(file)
