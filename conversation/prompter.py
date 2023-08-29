@@ -22,7 +22,7 @@ class Prompter:
         }
         self.session = {
             "history": [],
-            "history_summaries": ["They are starting conversation."],
+            "history_summaries": [],
             "prefix": None,
             "suffix": None,
         }
@@ -33,7 +33,8 @@ class Prompter:
         #question = self.clarify(input, 1)
         knowledge, question = self.extract(input, 1)
         retrieval = self.retrieve(question)
-        return ""
+        output = self.generate(question, knowledge, retrieval)
+        return output
     
     def clarify(
         self,
@@ -62,7 +63,7 @@ class Prompter:
         self,
         input: str,
         num_examples: int = None,
-    ) -> str:
+    ) -> tuple[str, str]:
         if num_examples is None:
             num_examples = len(self.examples["extractor"])
         input = self.templates["extractor"].format(
@@ -83,38 +84,44 @@ class Prompter:
         sections = [section.strip() for section in response.split("##") if section.strip()]
         for section in sections:
             if section.startswith("Knowledge"):
-                knowledge = [line.strip("- ").strip() for line in section.replace("Knowledge", "").strip().split("\n") if line.strip()]
+                # knowledge = [line.strip("- ").strip() for line in section.replace("Knowledge", "").strip().split("\n") if line.strip()]
+                knowledge = section.replace("Knowledge", "").strip()
             elif section.startswith("Question"):
                 question = section.replace("Question", "").strip()
 
         print("\n ** Extractor Output **")
-        print(knowledge, question)
+        print("knowledge:", knowledge, "question", question)
         return knowledge, question
     
     def retrieve(self, question: str) -> str:
+        if len(self.session["history_summaries"]) == 0:
+            return ""
+
         retrieved_summaries = self.retriever.retrieve_top_summaries(
             question, self.session["history_summaries"]
         )
 
         if not self.config.remove_cot:
-            numbered_summaries = [f"{i+1} " + summary for i, summary in enumerate(retrieved_summaries)]
+            numbered_summaries = [f"{i+1}. " + summary for i, summary in enumerate(retrieved_summaries)]
             summaries = "\n".join(numbered_summaries)
         else:
             summaries = "\n".join(retrieved_summaries)
+        return summaries
 
-        # Few-shot retrieval
-        input = self.templates["memory_processor"].format(
-            summaries=summaries,
+    def generate(self, question: str, knowledge: str, retrieval: str) -> str:
+        input = self.templates["generator"].format(
+            knowledge=f"{knowledge}\n{retrieval}",
             question=question,
         )
-        print("\n  ** Retrieval Input **")
+        print("\n  ** Generator Input **")
         print(input)
 
         completion = "".join(self.model.fn(
             input,
             temperature=0.3,
+            stop=[],
         ))
-        print("\n  ** Retrieval Output **")
+        print("\n  ** Generator Output **")
         print(completion)
         return completion
 
