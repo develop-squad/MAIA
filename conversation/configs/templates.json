@@ -5,8 +5,9 @@
     "extractor": "{examples}\n# Extract knowledge and question from user's utterance.\nUser: {input}",
     "retriever": "Q: What fact can help answer the following question: {question}",
     "reasoner": "{examples}\n# This is the list of assistant's knowledge.\n{knowledge}\n## Q: {question}\n## A: Let's think step by step.",
-    "generator": "# Answer the question by the following reasoning process.\n## Q: {question}\n## Reasoning\n{reasoning}\n## A:",
+    "generator": "# Answer the question from the assistant's perspective by the following reasoning process.\n## Q: {question}\n## Reasoning\n{reasoning}\n## A:",
     "_summarizer": "{history}\nSummarize this conversation.\n-",
-    "summarizer": "# Summarize the key insights from the conversation into a list.\n## Background knowledge\n{knowledge}\n## Conversation\nUser: {question}\nAssistant: {answer}",
+    "__summarizer": "# Summarize the insights from the conversation into a list.\n## Background knowledge\n{knowledge}\n## Conversation\nUser: {question}\nAssistant: {answer}\n## Insights\n- ",
+    "summarizer": "# List valid facts from the conversation.\n## Background knowledge\n{knowledge}\n## Conversation\nUser: {question}\nAssistant: {answer}\n## Facts\n- ",
     "_": ""
 }

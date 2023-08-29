@@ -145,7 +145,7 @@ class Prompter:
 
         completion = "".join(self.model.fn(
             input,
-            temperature=0.7,
+            temperature=0.3,
         ))
         return completion
     
@@ -164,6 +164,7 @@ class Prompter:
         completion = "".join(self.model.fn(
             input,
             temperature=0.3,
+            stop=[],
         ))
         return completion
 
