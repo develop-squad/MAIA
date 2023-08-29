@@ -33,8 +33,9 @@ class Prompter:
         #question = self.clarify(input, 1)
         knowledge, question = self.extract(input, 1)
         retrieval = self.retrieve(question)
-        output = self.generate(question, knowledge, retrieval)
-        return output
+        reasoning = self.reasoning(question, knowledge, retrieval)
+        response = self.generate(question, reasoning)
+        return response
     
     def clarify(
         self,
@@ -47,16 +48,12 @@ class Prompter:
             examples="\n".join(self.examples["clarifier"][:num_examples]),
             input=input,
         )
-        print("\n  ** Clarifier Input **")
-        print(input)
 
         clarified_question = "".join(self.model.fn(
             input,
             temperature=0.3,
             stop=[],
         ))
-        print("\n ** Clarifier Output **")
-        print(clarified_question)
         return clarified_question
     
     def extract(
@@ -70,10 +67,8 @@ class Prompter:
             examples="\n".join(self.examples["extractor"][:num_examples]),
             input=input,
         )
-        print("\n  ** Extractor Input **")
-        print(input)
 
-        response = "".join(self.model.fn(
+        completion = "".join(self.model.fn(
             input,
             temperature=0.3,
             stop=[],
@@ -81,7 +76,7 @@ class Prompter:
 
         knowledge = []
         question = ""
-        sections = [section.strip() for section in response.split("##") if section.strip()]
+        sections = [section.strip() for section in completion.split("##") if section.strip()]
         for section in sections:
             if section.startswith("Knowledge"):
                 # knowledge = [line.strip("- ").strip() for line in section.replace("Knowledge", "").strip().split("\n") if line.strip()]
@@ -89,8 +84,6 @@ class Prompter:
             elif section.startswith("Question"):
                 question = section.replace("Question", "").strip()
 
-        print("\n ** Extractor Output **")
-        print("knowledge:", knowledge, "question", question)
         return knowledge, question
     
     def retrieve(self, question: str) -> str:
@@ -108,21 +101,33 @@ class Prompter:
             summaries = "\n".join(retrieved_summaries)
         return summaries
 
-    def generate(self, question: str, knowledge: str, retrieval: str) -> str:
-        input = self.templates["generator"].format(
-            knowledge=f"{knowledge}\n{retrieval}",
+    def reasoning(self, question: str, knowledge: str, retrieval: str, num_examples: int = None) -> str:
+        if num_examples is None:
+            num_examples = len(self.examples["extractor"])
+        input = self.templates["reasoner"].format(
+            examples="\n".join(self.examples["reasoner"][:num_examples]),
+            knowledge="\n".join([knowledge, retrieval]),
             question=question,
         )
-        print("\n  ** Generator Input **")
-        print(input)
 
         completion = "".join(self.model.fn(
             input,
             temperature=0.3,
             stop=[],
         ))
-        print("\n  ** Generator Output **")
-        print(completion)
+        return completion
+    
+    def generate(self, question: str, reasoning: str) -> str:
+        input = self.templates["generator"].format(
+            question=question,
+            reasoning=reasoning,
+        )
+
+        completion = "".join(self.model.fn(
+            input,
+            temperature=0.7,
+        ))
+
         return completion
 
     def _load_templates(self, filename: str) -> dict:
