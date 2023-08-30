@@ -36,12 +36,24 @@ class Prompter:
         self,
         input:str,
     ) -> str:
-        #question = self.clarify(input, 1)
+        # Conversation
         knowledge, question = self.extract(input, 1)
+        print(" ** Knowledge **\n", knowledge)
+        print(" ** Question **\n", question)
         retrieval = self.retrieve(question)
+        print(" ** Retrieval **\n", retrieval)
         reasoning = self.reasoning(question, knowledge, retrieval)
+        print(" ** Reasoning **\n", reasoning)
         response = self.generate(question, reasoning)
-        summary = self.summarize(question, knowledge, response)
+        print(" ** Generation **\n", response)
+
+        # Memorization
+        ## TODO: Conversation 결과를 제공한 후 Memorize하여 응답 시간 단축
+        summaries = self.summarize(question, knowledge, retrieval, response)
+        print(" ** Summarization **\n", summaries)
+        memories = self.memorize(knowledge, retrieval, summaries)
+        print(" ** Memorization **\n", memories)
+
         return response
     
     def clarify(
@@ -67,7 +79,7 @@ class Prompter:
         self,
         input: str,
         num_examples: int = None,
-    ) -> tuple[str, str]:
+    ) -> tuple[list[str], str]:
         if num_examples is None:
             num_examples = len(self.examples["extractor"])
         input = self.templates["extractor"].format(
@@ -86,8 +98,8 @@ class Prompter:
         sections = [section.strip() for section in completion.split("##") if section.strip()]
         for section in sections:
             if section.startswith("Knowledge"):
-                # knowledge = [line.strip("- ").strip() for line in section.replace("Knowledge", "").strip().split("\n") if line.strip()]
-                knowledge = section.replace("Knowledge", "").strip()
+                knowledge = [line.strip("- ").strip() for line in section.replace("Knowledge", "").strip().split("\n") if line.strip()]
+                # knowledge = section.replace("Knowledge", "").strip()
             elif section.startswith("Question"):
                 question = section.replace("Question", "").strip()
 
@@ -96,33 +108,34 @@ class Prompter:
     def retrieve(
         self,
         question: str,
-    ) -> str:
+    ) -> list[str]:
         if len(self.session["history_summaries"]) == 0:
             return ""
 
         retrieved_summaries = self.retriever.retrieve_top_summaries(
             question, self.session["history_summaries"]
         )
+        return retrieved_summaries
 
-        if not self.config.remove_cot:
-            numbered_summaries = [f"{i+1}. " + summary for i, summary in enumerate(retrieved_summaries)]
-            summaries = "\n".join(numbered_summaries)
-        else:
-            summaries = "\n".join(retrieved_summaries)
-        return summaries
+        # if not self.config.remove_cot:
+        #     numbered_summaries = [f"{i+1}. " + summary for i, summary in enumerate(retrieved_summaries)]
+        #     summaries = "\n".join(numbered_summaries)
+        # else:
+        #     summaries = "\n".join(retrieved_summaries)
+        # return summaries
 
     def reasoning(
         self,
         question: str,
-        knowledge: str,
-        retrieval: str,
+        knowledge: list[str],
+        retrieval: list[str],
         num_examples: int = None,
     ) -> str:
         if num_examples is None:
             num_examples = len(self.examples["extractor"])
         input = self.templates["reasoner"].format(
             examples="\n".join(self.examples["reasoner"][:num_examples]),
-            knowledge="\n".join([knowledge, retrieval]),
+            knowledge=self._combine_knowledge(knowledge, retrieval),
             question=question,
         )
 
@@ -152,12 +165,13 @@ class Prompter:
     def summarize(
         self,
         question: str,
-        knowledge: str,
+        knowledge: list[str],
+        retrieval: list[str],
         answer: str,
-    ) -> str:
+    ) -> list[str]:
         input = self.templates["summarizer"].format(
             question=question,
-            knowledge=knowledge,
+            knowledge=self._combine_knowledge(knowledge, retrieval),
             answer=answer,
         )
 
@@ -166,7 +180,36 @@ class Prompter:
             temperature=0.3,
             stop=[],
         ))
-        return completion
+
+        summaries = completion.split("\n")
+        summaries = [summary.strip("- ") for summary in summaries if summary.strip()]
+        return summaries
+    
+    def memorize(
+        self,
+        knowledge: list[str],
+        retrieval: list[str],
+        summaries: list[str],
+    ) -> list[str]:
+        knowledge_text = self._combine_knowledge(retrieval)
+        summaries_text = self._combine_knowledge(summaries, knowledge)
+
+        input = self.templates["deduplication"].format(
+            knowledge=knowledge_text,
+            summaries=summaries_text,
+        )
+        
+        completion = "".join(self.model.fn(
+            input,
+            temperature=0.3,
+            stop=[],
+        ))
+        print(input)
+
+        memories = completion.split("\n")
+        memories = [memory.strip("- ") for memory in memories if memory.strip()]
+        self.session["history_summaries"].extend(memories)
+        return memories
 
     def _load_templates(
         self,
@@ -179,3 +222,10 @@ class Prompter:
             raise Exception(f"Error: 'conversation/configs/{filename}' file not found!")
         except json.JSONDecodeError:
             raise Exception(f"Error: JSON decoding failed for 'conversation/configs/{filename}'!")
+
+    def _combine_knowledge(
+        self, 
+        *args,
+    ) -> str:
+        combined = [f"- {item}" for arg in args for item in arg]
+        return "\n".join(combined)

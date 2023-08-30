@@ -9,5 +9,6 @@
     "_summarizer": "{history}\nSummarize this conversation.\n-",
     "__summarizer": "# Summarize the insights from the conversation into a list.\n## Background knowledge\n{knowledge}\n## Conversation\nUser: {question}\nAssistant: {answer}\n## Insights\n- ",
     "summarizer": "# List valid facts from the conversation.\n## Background knowledge\n{knowledge}\n## Conversation\nUser: {question}\nAssistant: {answer}\n## Facts\n- ",
+    "deduplication": "# Pick out the summary items that aren't in the background knowledge\n## Background knowledge\n{knowledge}\n## Summary\n{summaries}",
     "_": ""
 }
