@@ -1,5 +1,6 @@
-import json
+import os
 import os.path as osp
+import json
 from dataclasses import dataclass
 from utils.model import Model
 from conversation.retriever import BiEncoderRetriever
@@ -8,11 +9,13 @@ from conversation.retriever import BiEncoderRetriever
 class PromptConfig:
     remove_cot: bool = False
 
-class Prompter:
+class Prompter(Model):
     def __init__(
         self,
         model: Model,
     ) -> None:
+        super().__init__()
+
         self.model = model
 
         self.config = PromptConfig()
@@ -31,6 +34,7 @@ class Prompter:
         }
 
         self.retriever = BiEncoderRetriever()
+        self.fn = self.prompt
     
     def prompt(
         self,
@@ -71,7 +75,6 @@ class Prompter:
         clarified_question = "".join(self.model.fn(
             input,
             temperature=0.3,
-            stop=[],
         ))
         return clarified_question
     
@@ -90,7 +93,6 @@ class Prompter:
         completion = "".join(self.model.fn(
             input,
             temperature=0.3,
-            stop=[],
         ))
 
         knowledge = []
@@ -142,7 +144,6 @@ class Prompter:
         completion = "".join(self.model.fn(
             input,
             temperature=0.3,
-            stop=[],
         ))
         return completion
     
@@ -168,8 +169,12 @@ class Prompter:
         knowledge: list[str],
         retrieval: list[str],
         answer: str,
+        num_examples: int = None,
     ) -> list[str]:
+        if num_examples is None:
+            num_examples = len(self.examples["summarizer"])
         input = self.templates["summarizer"].format(
+            examples="\n".join(self.examples["summarizer"][:num_examples]),
             question=question,
             knowledge=self._combine_knowledge(knowledge, retrieval),
             answer=answer,
@@ -178,7 +183,6 @@ class Prompter:
         completion = "".join(self.model.fn(
             input,
             temperature=0.3,
-            stop=[],
         ))
 
         summaries = completion.split("\n")
@@ -190,11 +194,15 @@ class Prompter:
         knowledge: list[str],
         retrieval: list[str],
         summaries: list[str],
+        num_examples: int = None,
     ) -> list[str]:
         knowledge_text = self._combine_knowledge(retrieval)
         summaries_text = self._combine_knowledge(summaries, knowledge)
 
+        if num_examples is None:
+            num_examples = len(self.examples["deduplication"])
         input = self.templates["deduplication"].format(
+            examples="\n".join(self.examples["deduplication"][:num_examples]),
             knowledge=knowledge_text,
             summaries=summaries_text,
         )
@@ -202,7 +210,6 @@ class Prompter:
         completion = "".join(self.model.fn(
             input,
             temperature=0.3,
-            stop=[],
         ))
 
         memories = completion.split("\n")
@@ -221,6 +228,22 @@ class Prompter:
             raise Exception(f"Error: 'conversation/configs/{filename}' file not found!")
         except json.JSONDecodeError:
             raise Exception(f"Error: JSON decoding failed for 'conversation/configs/{filename}'!")
+        
+    def _load_prompts(
+        self,
+        directory: str,
+    ) -> dict:
+        prompts = {}
+        for filename in os.listdir(directory):
+            if filename.endswith(".txt"):
+                filepath = os.path.join(directory, filename)
+                
+                with open(filepath, 'r', encoding='utf-8') as file:
+                    content = file.read()
+                    
+                name_without_extension = os.path.splitext(filename)[0]
+                prompts[name_without_extension] = content    
+        return prompts
 
     def _combine_knowledge(
         self, 
