@@ -204,7 +204,6 @@ class Prompter:
             temperature=0.3,
             stop=[],
         ))
-        print(input)
 
         memories = completion.split("\n")
         memories = [memory.strip("- ") for memory in memories if memory.strip()]
