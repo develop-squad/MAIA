@@ -1,7 +1,6 @@
 import os
 import os.path as osp
 import json
-import typing
 from dataclasses import dataclass
 from utils.model import Model
 from conversation.retriever import BiEncoderRetriever
@@ -20,7 +19,8 @@ class Prompter(Model):
         self.model = model
 
         self.config = PromptConfig()
-        self.templates = self._load_prompts("conversation/prompts/")
+        self.templates = self._load_templates("templates.json")
+        self.examples = self._load_templates("examples.json")
         self.responses = {
             "clarifier": None,
             "retrieval": None,
@@ -40,30 +40,23 @@ class Prompter(Model):
         self,
         input:str,
     ) -> str:
-        # Conversation Layer
-        print("\n ** Extractor **")
-        knowledge, query = self.extract(input)
-        print("* Knowledge, Question:", (knowledge, query))
+        # Conversation
+        knowledge, question = self.extract(input, 1)
+        print(" ** Knowledge **\n", knowledge)
+        print(" ** Question **\n", question)
+        retrieval = self.retrieve(question)
+        print(" ** Retrieval **\n", retrieval)
+        reasoning = self.reasoning(question, knowledge, retrieval)
+        print(" ** Reasoning **\n", reasoning)
+        response = self.generate(question, reasoning)
+        print(" ** Generation **\n", response)
 
-        print("\n ** Retriever **")
-        retrieval = self.retrieve(query)
-        print("* Retrieval:", retrieval)
-
-        print("\n ** Reasoning **")
-        conclusion = self.reasoning(knowledge + retrieval, query)
-        print("* Conclusion:", conclusion)
-
-        print("\n ** Generator **")
-        response = self.generate(conclusion, query)
-        print("* Generation:", response)
-
-        # Memorization Layer
+        # Memorization
         ## TODO: Conversation 결과를 제공한 후 Memorize하여 응답 시간 단축
-        # summaries = self.summarize(question, knowledge, retrieval, response)
-        # print(" ** Summarization **\n", summaries)
-
-        # memories = self.memorize(knowledge, retrieval, summaries)
-        # print(" ** Memorization **\n", memories)
+        summaries = self.summarize(question, knowledge, retrieval, response)
+        print(" ** Summarization **\n", summaries)
+        memories = self.memorize(knowledge, retrieval, summaries)
+        print(" ** Memorization **\n", memories)
 
         return response
     
@@ -84,80 +77,90 @@ class Prompter(Model):
             temperature=0.3,
         ))
         return clarified_question
-
+    
     def extract(
         self,
         input: str,
+        num_examples: int = None,
     ) -> tuple[list[str], str]:
-        prompt = self.templates["extractor"].format(
+        if num_examples is None:
+            num_examples = len(self.examples["extractor"])
+        input = self.templates["extractor"].format(
+            examples="\n".join(self.examples["extractor"][:num_examples]),
             input=input,
         )
-        completion = "".join(self.model.fn(
-            input=prompt,
-            temperature=0,
-        ))
-        print("* Completion:", completion)
 
-        knowledge = self._parse_completion(completion, "Knowledge")
-        query = self._parse_completion(completion, "Query")
-    
-        return knowledge, query
+        completion = "".join(self.model.fn(
+            input,
+            temperature=0.3,
+        ))
+
+        knowledge = []
+        question = ""
+        sections = [section.strip() for section in completion.split("##") if section.strip()]
+        for section in sections:
+            if section.startswith("Knowledge"):
+                knowledge = [line.strip("- ").strip() for line in section.replace("Knowledge", "").strip().split("\n") if line.strip()]
+                # knowledge = section.replace("Knowledge", "").strip()
+            elif section.startswith("Question"):
+                question = section.replace("Question", "").strip()
+
+        return knowledge, question
     
     def retrieve(
         self,
-        query: str,
+        question: str,
     ) -> list[str]:
         if len(self.session["history_summaries"]) == 0:
-            return []
+            return ""
 
-        retrieval = self.retriever.retrieve_top_summaries(
-            query, self.session["history_summaries"],
+        retrieved_summaries = self.retriever.retrieve_top_summaries(
+            question, self.session["history_summaries"]
         )
+        return retrieved_summaries
 
-        return retrieval
-    
+        # if not self.config.remove_cot:
+        #     numbered_summaries = [f"{i+1}. " + summary for i, summary in enumerate(retrieved_summaries)]
+        #     summaries = "\n".join(numbered_summaries)
+        # else:
+        #     summaries = "\n".join(retrieved_summaries)
+        # return summaries
+
     def reasoning(
         self,
+        question: str,
         knowledge: list[str],
-        query: str,
+        retrieval: list[str],
+        num_examples: int = None,
     ) -> str:
-        prompt = self.templates["reasoner"].format(
-            knowledge=knowledge,
-            query=query,
+        if num_examples is None:
+            num_examples = len(self.examples["extractor"])
+        input = self.templates["reasoner"].format(
+            examples="\n".join(self.examples["reasoner"][:num_examples]),
+            knowledge=self._combine_knowledge(knowledge, retrieval),
+            question=question,
         )
-        print("* Prompt:", prompt)
+
         completion = "".join(self.model.fn(
-            input=prompt,
-            temperature=0,
+            input,
+            temperature=0.3,
         ))
-        print("* Completion:", completion)
-
-        conclusion = self._parse_completion(completion, "Conclusion")
-
-        if len(conclusion) == 0:
-            conclusion = ""
-            print("** No conclusions were reached. **")
-            print(completion)
-            return completion
-        
-        return conclusion
-
+        return completion
+    
     def generate(
         self,
-        information: str,
-        query: str,
+        question: str,
+        reasoning: str,
     ) -> str:
-        prompt = self.templates["generator"].format(
-            query=query,
-            information=information,
+        input = self.templates["generator"].format(
+            question=question,
+            reasoning=reasoning,
         )
-        print("* Prompt:", prompt)
+
         completion = "".join(self.model.fn(
-            input=prompt,
-            temperature=0.7,
+            input,
+            temperature=0.3,
         ))
-        print("* Completion:", completion)
-        
         return completion
     
     def summarize(
@@ -229,7 +232,7 @@ class Prompter(Model):
     def _load_prompts(
         self,
         directory: str,
-    ) -> dict[str, str]:
+    ) -> dict:
         prompts = {}
         for filename in os.listdir(directory):
             if filename.endswith(".txt"):
@@ -241,31 +244,10 @@ class Prompter(Model):
                 name_without_extension = os.path.splitext(filename)[0]
                 prompts[name_without_extension] = content    
         return prompts
-    
-    def _parse_completion(
-        self,
-        completion: str,
-        title: str
-    ) -> typing.Union[list[str], str]:
-        start_tags = [f"#{title}\n", f"#{title}: ", f"{title}: ", f"{title}\n"]
-        end_tag = "#"
-        
-        start_tag = next((tag for tag in start_tags if tag in completion), None)
-        
-        if start_tag:
-            content = completion.split(start_tag)[1].split(end_tag)[0].strip()
-            
-            # Determine if the content starts with '- ' (to decide if returning a list)
-            if content.startswith("- "):
-                return [item.strip().replace("- ", "").replace("* ", "") for item in content.split("\n") if item.strip()]
-            else:
-                return content
-        else:
-            return []
 
     def _combine_knowledge(
         self, 
         *args,
     ) -> str:
-        combined = [f"({idx + 1}) {item}" for idx, item in enumerate(item for arg in args for item in arg)]
-        return " ".join(combined)
+        combined = [f"- {item}" for arg in args for item in arg]
+        return "\n".join(combined)

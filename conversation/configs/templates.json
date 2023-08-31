@@ -2,13 +2,13 @@
     "_clarifier": "Rephrase the question in third-person.\n{examples}\n{input} => ",
     "__clarifier": "Remove irrelevant content and rephrase the question to get to the point.\n{examples}\n{input} => ",
     "clarifier": "Rephrase User's question in third-person.\nUser: {input}\n# Specifically,",
-    "extractor": "{examples}\n# Extract knowledge and question from user's utterance.\nUser: {input}",
+    "extractor": "{examples}\n# Extract knowledge and question from user's utterance. And fill in the form below.\nUser: {input}\n## Knowledge\n- <extracted knowledge>\n## Question\n<extracted question>",
     "retriever": "Q: What fact can help answer the following question: {question}",
-    "reasoner": "{examples}\n# This is the list of assistant's knowledge.\n{knowledge}\n## Q: {question}\n## A: Let's think step by step.",
-    "generator": "# Answer the question from the assistant's perspective by the following reasoning process.\n## Q: {question}\n## Reasoning\n{reasoning}\n## A:",
+    "reasoner": "# This is the list of assistant's knowledge. Fill in the form below.\n{knowledge}\n## Q: {question}\n## A: Let's think step by step.\n(1) <fill in here step by step>\n## Result\n<keep it short here>",
+    "generator": "# Answer the question from the assistant's perspective by the following reasoning process.\n## Q: {question}\n## Reasoning\n{reasoning}\n## A: <keep it short here>",
     "_summarizer": "{history}\nSummarize this conversation.\n-",
     "__summarizer": "# Summarize the insights from the conversation into a list.\n## Background knowledge\n{knowledge}\n## Conversation\nUser: {question}\nAssistant: {answer}\n## Insights\n- ",
-    "summarizer": "# List valid facts from the conversation.\n## Background knowledge\n{knowledge}\n## Conversation\nUser: {question}\nAssistant: {answer}\n## Facts\n- ",
-    "deduplication": "# Pick out the summary items that aren't in the background knowledge.\n## Background knowledge\n{knowledge}\n## Summary\n{summaries}",
+    "summarizer": "# List valid facts from the conversation. And fill in the form below.\n## Background knowledge\n{knowledge}\n## Conversation\nUser: {question}\nAssistant: {answer}\n- <keep it short here>",
+    "deduplication": "# Pick out the summary items that aren't in the background knowledge. And fill in the form below.\n## Background knowledge\n{knowledge}\n## Summary\n{summaries}\n- <keep it short here>",
     "_": ""
 }

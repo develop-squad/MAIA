@@ -4,11 +4,16 @@
         "There are many LLMs out there, and one of them is probably the GPT. I wonder when they were developed. Do you know that? => When were LLMs developed?"
     ],
     "extractor": [
-        "# Extract knowledge and question from user's utterance.\nUser: Roger has 5 tennis balls. He buys 2 more cans of tennis balls. Each can has 3 tennis balls. How many tennis balls does he have now?\n## Knowledge\n- Roger initially has 5 tennis balls.\n- He purchases 2 cans of tennis balls.\n- Each can contains 3 tennis balls.\n## Question\nHow many tennis balls does Roger have now?"
+        "# Example\nUser: Roger has 5 tennis balls. He buys 2 more cans of tennis balls. Each can has 3 tennis balls. How many tennis balls does he have now?\n## Knowledge\n- Roger initially has 5 tennis balls.\n- He purchases 2 cans of tennis balls.\n- Each can contains 3 tennis balls.\n## Question\nHow many tennis balls does Roger have now?"
     ],
     "retrieval": [],
     "reasoner": [
         "# This is the list of assistant's knowledge.\n- Roger initially has 5 tennis balls.\n- He purchases 2 cans of tennis balls.\n- Each can contains 3 tennis balls.\n## Q: How many tennis balls does Roger have now?\n## A: Let's think setp by step.\n(1) Roger initially has 5 tennis balls.\n(2) Roger purchases 2 cans of tennis balls.\n(3) Each can contains 3 tennis balls.\n(4) To find out how many tennis balls Roger has now, we need to add the initial number of tennis balls to the number of tennis balls he purchased.\n(5) Roger initially has 5 tennis balls + 2 cans * 3 tennis balls per can.\n(6) 5 + 2 * 3 = 5 + 6 = 11\n## Result\nRoger now has 11 tennis balls."
     ],
-    "summerizer": []
+    "summarizer": [
+        "# Example\n- Roger initially has 5 tennis balls.\n- Roger purchased 12 tennis balls.\n- Roger now has 11 tennis balls."
+    ],
+    "deduplication": [
+        "# Example\n- Roger initially has 5 tennis balls.\n- Roger purchased 12 tennis balls.\n- Roger now has 11 tennis balls."
+    ]
 }

@@ -1,0 +1,13 @@
+Answer the user based on the information provided or general knowledge. Then rephrase it in the assistant's dialog.
+
+User says: What is Ashley's favorite dish?
+Information: Ashley thinks Ashley likes French cuisine but does not like Korean food.
+Assistant says: Ashley likes French cuisine.
+
+User says: What might James enjoy during his free time?
+Information: James enjoys watching sci-fi movies and playing the guitar during his free time.
+Assistant says: James enjoys watching sci-fi movies and playing the guitar.
+
+User says: {query}
+Information: {information}
+Assistant says: 
