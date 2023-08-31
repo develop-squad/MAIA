@@ -44,7 +44,7 @@ class ConversationForm(Form):
                 queue=False
             )
 
-            audio_record.change(
+            audio_record.stop_recording(
                 self.__add_record,
                 inputs=[chatbot, audio_record],
                 outputs=[chatbot],
