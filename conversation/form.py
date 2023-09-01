@@ -81,7 +81,7 @@ class ConversationForm(Form):
                 text_input = gr.Textbox(show_label=False)
                 text_input.style(container=False)
             with gr.Row():
-                finish_button = gr.Button("Finish")
+                finish_button = gr.Button("Finish the conversation session")
             with gr.Row():
                 with gr.Column(scale=0.7):
                     last_question = gr.Radio(
