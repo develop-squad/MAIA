@@ -28,28 +28,40 @@ class ConversationForm(Form):
 
             chatbot = gr.Chatbot(elem_id="chatbot")
 
-            with gr.Row():
+            with gr.Column():
                 question1 = gr.Radio(
-                    choices=[("Yes", 1), ("No", 0)],
+                    choices=[
+                        ("Strongly disagree", 1),
+                        ("Disagree", 2),
+                        ("Neither agree nor disagree", 3),
+                        ("Agree", 4),
+                        ("Strongly agree", 5)
+                    ],
                     label="Is the response correct?",
                     show_label=True,
                     visible=False,
                 )
                 question2 = gr.Radio(
-                    choices=[("Yes", 1), ("No", 0)],
+                    choices=[
+                        ("Strongly disagree", 1),
+                        ("Disagree", 2),
+                        ("Neither agree nor disagree", 3),
+                        ("Agree", 4),
+                        ("Strongly agree", 5)
+                    ],
                     label="Is the context of the response consistent?",
                     show_label=True,
                     visible=False,
                 )
                 question3 = gr.Radio(
-                    choices=[("Yes", 1), ("No", 0)],
+                    choices=[
+                        ("Strongly disagree", 1),
+                        ("Disagree", 2),
+                        ("Neither agree nor disagree", 3),
+                        ("Agree", 4),
+                        ("Strongly agree", 5)
+                    ],
                     label="Are you interested in the response? Would you like to continue the conversation?",
-                    show_label=True,
-                    visible=False,
-                )
-                last_question = gr.Radio(
-                    choices=[("Yes", 1), ("No", 0)],
-                    label="How was the conversation?",
                     show_label=True,
                     visible=False,
                 )
@@ -72,11 +84,14 @@ class ConversationForm(Form):
                 finish_button = gr.Button("Finish")
             with gr.Row():
                 with gr.Column(scale=0.7):
-                    last_question = gr.Slider(
-                        minimum=1,
-                        maximum=5,
-                        value=3,
-                        step=0.5,
+                    last_question = gr.Radio(
+                        choices=[
+                            ("Strongly disagree", 1),
+                            ("Disagree", 2),
+                            ("Neither agree nor disagree", 3),
+                            ("Agree", 4),
+                            ("Strongly agree", 5)
+                        ],
                         label="How was the conversation?",
                         show_label=True,
                         visible=False,
