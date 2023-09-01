@@ -8,6 +8,7 @@ class PaLM(Model):
         self,
         api_key: str = "",
         model: str = "models/chat-bison-001",
+        context: bool = True,
     ):
         self.api_key = api_key or os.getenv("GOOGLE_API_KEY", "")
         assert (
@@ -15,8 +16,10 @@ class PaLM(Model):
         ), "Please specify an --google_api_key"
         palm.configure(api_key=self.api_key)
 
+        self.model_name = model
         self.model = palm.get_model(model)
         self.messages = []
+        self.context = context
 
         self.setup_interface(self.prompt, self.get_inputs(), self.get_outputs())
 
@@ -26,26 +29,45 @@ class PaLM(Model):
         temperature=0.25,
         top_p=0.95,
         top_k=40,
+        stop=[],
     ):
-        self.messages.append({
+        message = {
             "author": "user",
             "content": input,
-        })
+        }
 
-        chat = palm.chat(
-            model=self.model,
-            messages=self.messages,
-            temperature=temperature,
-            top_p=top_p,
-            top_k=top_k,
-        )
-        author = chat.messages[-1]['author']
-        reply = chat.messages[-1]['content']
+        if self.context:
+            self.messages.append(message)
+        else:
+            self.messages = message
 
-        self.messages.append({
-            "author": author,
-            "content": reply
-        })
+        if self.model_name == "models/chat-bison-001":
+            chat = palm.chat(
+                model=self.model,
+                messages=self.messages,
+                temperature=temperature,
+                top_p=top_p,
+                top_k=top_k,
+            )
+            author = chat.messages[-1]['author']
+            reply = chat.messages[-1]['content']
+        else:
+            author = "assistant"
+            reply = palm.generate_text(
+                model=self.model,
+                prompt=input,
+                temperature=temperature,
+                top_p=top_p,
+                top_k=top_k,
+                stop_sequences=stop,
+            )
+            reply = reply.result
+
+        if self.context:
+            self.messages.append({
+                "author": author,
+                "content": reply
+            })
 
         return reply
     

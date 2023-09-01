@@ -1,0 +1,20 @@
+Extract query from user's utterance. And summarize it briefly.
+
+User: Roger has 5 tennis balls. He buys 2 more cans of tennis balls. Each can has 3 tennis balls. How many tennis balls does he have now?
+#Knowledge
+- Roger initially has 5 tennis balls.
+- Roger bought two cans of tennis balls with six balls in each can.#
+#Query: How many tennis balls does Roger have now?#
+
+User: There are 8 students in the music club and 12 students in the art club. How many students are there in total in both clubs?
+#Knowledge
+- There are 8 students in the music club.
+- There are 12 students in the art club.#
+#Query: How many students are there in total in both clubs?#
+
+User: I lost my glasses.
+#Knowledge
+- The user has lost their glasses.#
+#Query: I lost my glasses.#
+
+User: {input}

@@ -20,6 +20,7 @@ class Alpaca(Model):
         base_model: str = "",
         lora_weights: str = "tloen/alpaca-lora-7b",
         prompt_template: str = "",
+        context: bool = True,
     ):
         self.base_model = base_model or os.environ.get("BASE_MODEL", "")
         assert (
@@ -80,6 +81,7 @@ class Alpaca(Model):
         
         self.role = "assistant"
         self.messages = []
+        self.context = context
 
         self.setup_interface(self.evaluate, self.get_inputs(), self.get_outputs())
         
@@ -95,11 +97,13 @@ class Alpaca(Model):
         stream_output=False,
         **kwargs,
     ):
-        self.messages.append(("user", instruction))
-
-        context = "\n".join([": ".join(message) for message in self.messages])
-        prompt = self.prompter.generate_prompt(f"{context}\n{self.role}: ", input)
-        # prompt = self.prompter.generate_prompt(instruction, input)
+        if self.context:
+            self.messages.append(("user", instruction))
+            context = "\n".join([": ".join(message) for message in self.messages])
+            prompt = self.prompter.generate_prompt(f"{context}\n{self.role}: ", input)
+        else:
+            prompt = self.prompter.generate_prompt(instruction, input)
+        
         inputs = self.tokenizer(prompt, return_tensors="pt")
         input_ids = inputs["input_ids"].to(self.device)
         generation_config = GenerationConfig(
@@ -162,7 +166,8 @@ class Alpaca(Model):
         output = self.tokenizer.decode(s)
         response = self.prompter.get_response(output)
 
-        self.messages.append((self.role, "".join(response)))
+        if self.context:
+            self.messages.append((self.role, "".join(response)))
 
         yield response
         
