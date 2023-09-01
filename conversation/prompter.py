@@ -57,13 +57,17 @@ class Prompter(Model):
         response = self.generate(conclusion, query)
         print("* Generation:", response)
 
+        self.session["history"].extend([
+            {"role": "User", "content": input},
+            {"role": "Assistant", "content": response},
+        ])
+
         # Memorization Layer
         ## TODO: Conversation 결과를 제공한 후 Memorize하여 응답 시간 단축
-        # summaries = self.summarize(question, knowledge, retrieval, response)
-        # print(" ** Summarization **\n", summaries)
+        summaries = self.summarize(self.session["history"])
+        print(" ** Summarization **\n", summaries)
 
-        # memories = self.memorize(knowledge, retrieval, summaries)
-        # print(" ** Memorization **\n", memories)
+        self.session["history_summary"] = summaries
 
         return response
     
@@ -162,57 +166,21 @@ class Prompter(Model):
     
     def summarize(
         self,
-        question: str,
-        knowledge: list[str],
-        retrieval: list[str],
-        answer: str,
-        num_examples: int = None,
+        history: list[dict[str, str]],
     ) -> list[str]:
-        if num_examples is None:
-            num_examples = len(self.examples["summarizer"])
-        input = self.templates["summarizer"].format(
-            examples="\n".join(self.examples["summarizer"][:num_examples]),
-            question=question,
-            knowledge=self._combine_knowledge(knowledge, retrieval),
-            answer=answer,
-        )
+        dialogue = "\n".join(f"{item['role']}: {item['content']}" for item in history)
 
+        prompt = self.templates["summarizer"].format(
+            dialogue=dialogue,
+        )
         completion = "".join(self.model.fn(
-            input,
-            temperature=0.3,
+            input=prompt,
+            temperature=0,
         ))
 
-        summaries = completion.split("\n")
-        summaries = [summary.strip("- ") for summary in summaries if summary.strip()]
-        return summaries
-    
-    def memorize(
-        self,
-        knowledge: list[str],
-        retrieval: list[str],
-        summaries: list[str],
-        num_examples: int = None,
-    ) -> list[str]:
-        knowledge_text = self._combine_knowledge(retrieval)
-        summaries_text = self._combine_knowledge(summaries, knowledge)
-
-        if num_examples is None:
-            num_examples = len(self.examples["deduplication"])
-        input = self.templates["deduplication"].format(
-            examples="\n".join(self.examples["deduplication"][:num_examples]),
-            knowledge=knowledge_text,
-            summaries=summaries_text,
-        )
+        summary = self._parse_completion(completion, "Summary")
         
-        completion = "".join(self.model.fn(
-            input,
-            temperature=0.3,
-        ))
-
-        memories = completion.split("\n")
-        memories = [memory.strip("- ") for memory in memories if memory.strip()]
-        self.session["history_summaries"].extend(memories)
-        return memories
+        return summary
 
     def _load_templates(
         self,
