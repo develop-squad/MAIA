@@ -255,7 +255,7 @@ class ConversationForm(PairwiseForm):
         speech_data = f"data:audio/wav;base64,{speech2 if random_num == 0 else speech}"
         output += f"<br/><br/>[Model 2]<br/><audio controls src=\"{speech_data}\" type=\"audio/wav\"></audio>"
         output += message2 if random_num == 0 else message
-            
+        
         print(f"- Assistant 1: {message2}")
         print(f"- Assistant 2: {message}")
 
