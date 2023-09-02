@@ -1,8 +1,9 @@
 import gradio as gr
 import logging
-from utils.form import Form
+import random
+from utils.pairwise_form import PairwiseForm 
 
-class ConversationForm(Form):
+class ConversationForm(PairwiseForm):
     def __init__(self, model, title):
         super().__init__(model=model, title=title)
         self.logger = logging.getLogger()
@@ -243,13 +244,32 @@ class ConversationForm(Form):
                 text_input=input,
                 forced_response="I can't process this type of input.",
             )
-        transcript, message, speech = response
+        transcript, message, speech, message2, speech2 = response
         print(f"- User: {transcript}")
-        print(f"- Assistant: {message}")
 
-        speech_data = f"data:audio/wav;base64,{speech}"
-        output = f"<audio controls autoplay src=\"{speech_data}\" type=\"audio/wav\"></audio>"
-        output += message
+        random_num = random.randrange(2)
+        if random_num == 0:
+            speech_data = f"data:audio/wav;base64,{speech}"
+            output = f"[Model 1]<br/><audio controls autoplay src=\"{speech_data}\" type=\"audio/wav\"></audio>"
+            output += message
+        
+            speech_data = f"data:audio/wav;base64,{speech2}"
+            output += f"<br/><br/>[Model 2]<br/><audio controls src=\"{speech_data}\" type=\"audio/wav\"></audio>"
+            output += message2
+            
+            print(f"- Assistant 1: {message}")
+            print(f"- Assistant 2: {message2}")
+        else:
+            speech_data = f"data:audio/wav;base64,{speech2}"
+            output = f"[Model 1]<br/><audio controls autoplay src=\"{speech_data}\" type=\"audio/wav\"></audio>"
+            output += message2
+        
+            speech_data = f"data:audio/wav;base64,{speech}"
+            output += f"<br/><br/>[Model 2]<br/><audio controls src=\"{speech_data}\" type=\"audio/wav\"></audio>"
+            output += message
+            
+            print(f"- Assistant 1: {message2}")
+            print(f"- Assistant 2: {message}")
 
         history[-1] = (transcript, output)
         return history
