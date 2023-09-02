@@ -248,28 +248,16 @@ class ConversationForm(PairwiseForm):
         print(f"- User: {transcript}")
 
         random_num = random.randrange(2)
-        if random_num == 0:
-            speech_data = f"data:audio/wav;base64,{speech}"
-            output = f"[Model 1]<br/><audio controls autoplay src=\"{speech_data}\" type=\"audio/wav\"></audio>"
-            output += message
+        speech_data = f"data:audio/wav;base64,{speech if random_num == 0 else speech2}"
+        output = f"[Model 1]<br/><audio controls autoplay src=\"{speech_data}\" type=\"audio/wav\"></audio>"
+        output += message if random_num == 0 else message2
         
-            speech_data = f"data:audio/wav;base64,{speech2}"
-            output += f"<br/><br/>[Model 2]<br/><audio controls src=\"{speech_data}\" type=\"audio/wav\"></audio>"
-            output += message2
+        speech_data = f"data:audio/wav;base64,{speech2 if random_num == 0 else speech}"
+        output += f"<br/><br/>[Model 2]<br/><audio controls src=\"{speech_data}\" type=\"audio/wav\"></audio>"
+        output += message2 if random_num == 0 else message
             
-            print(f"- Assistant 1: {message}")
-            print(f"- Assistant 2: {message2}")
-        else:
-            speech_data = f"data:audio/wav;base64,{speech2}"
-            output = f"[Model 1]<br/><audio controls autoplay src=\"{speech_data}\" type=\"audio/wav\"></audio>"
-            output += message2
-        
-            speech_data = f"data:audio/wav;base64,{speech}"
-            output += f"<br/><br/>[Model 2]<br/><audio controls src=\"{speech_data}\" type=\"audio/wav\"></audio>"
-            output += message
-            
-            print(f"- Assistant 1: {message2}")
-            print(f"- Assistant 2: {message}")
+        print(f"- Assistant 1: {message2}")
+        print(f"- Assistant 2: {message}")
 
         history[-1] = (transcript, output)
         return history
