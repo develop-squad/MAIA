@@ -323,10 +323,17 @@ class ConversationForm(PairwiseForm):
         if None in all_questions:
             return tuple(all_questions)
         
+        message1 = chatbot[-1][1].split('</audio>')[1].split('<br/>')[0]
+        message2 = chatbot[-1][1].split('</audio>')[1].split('</audio>')[-1]
+        
+        bot_message = dict()
+        bot_message['chatgpt'] = message1 if self.random_num == 0 else message2
+        bot_message['palm'] = message2 if self.random_num == 0 else message1
+        
         content = dict()
         content["name"] = name_input
         content["speech"] = chatbot[-1][0]
-        content["bot_message"] = chatbot[-1][1].split('</audio>')[-1]
+        content["bot_message"] = bot_message
         content["answer"] = all_questions
         self.logger.info(f"Benchmark: {str(content)}")
         
