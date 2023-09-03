@@ -30,7 +30,89 @@ class ConversationForm(PairwiseForm):
             chatbot = gr.Chatbot(elem_id="chatbot")
 
             with gr.Column():
-                question1 = gr.Radio(
+                with gr.Row():
+                    question1 = gr.Radio(
+                        scale=0.5,
+                        choices=[
+                            ("Strongly disagree", 1),
+                            ("Disagree", 2),
+                            ("Neither agree nor disagree", 3),
+                            ("Agree", 4),
+                            ("Strongly agree", 5)
+                        ],
+                        label="[Model 1] Is the response correct?",
+                        show_label=True,
+                        visible=False,
+                    )
+                    question4 = gr.Radio(
+                        scale=0.5,
+                        choices=[
+                            ("Strongly disagree", 1),
+                            ("Disagree", 2),
+                            ("Neither agree nor disagree", 3),
+                            ("Agree", 4),
+                            ("Strongly agree", 5)
+                        ],
+                        label="[Model 2] Is the response correct?",
+                        show_label=True,
+                        visible=False,
+                    )
+                with gr.Row():
+                    question2 = gr.Radio(
+                        scale=0.5,
+                        choices=[
+                            ("Strongly disagree", 1),
+                            ("Disagree", 2),
+                            ("Neither agree nor disagree", 3),
+                            ("Agree", 4),
+                            ("Strongly agree", 5)
+                        ],
+                        label="[Model 1] Is the context of the response consistent?",
+                        show_label=True,
+                        visible=False,
+                    )
+                    question5 = gr.Radio(
+                        scale=0.5,
+                        choices=[
+                            ("Strongly disagree", 1),
+                            ("Disagree", 2),
+                            ("Neither agree nor disagree", 3),
+                            ("Agree", 4),
+                            ("Strongly agree", 5)
+                        ],
+                        label="[Model 2] Is the context of the response consistent?",
+                        show_label=True,
+                        visible=False,
+                    )
+                with gr.Row():
+                    question3 = gr.Radio(
+                        scale=0.5,
+                        choices=[
+                            ("Strongly disagree", 1),
+                            ("Disagree", 2),
+                            ("Neither agree nor disagree", 3),
+                            ("Agree", 4),
+                            ("Strongly agree", 5)
+                        ],
+                        label="Are you interested in the response? Would you like to continue the conversation?",
+                        show_label=True,
+                        visible=False,
+                    )
+                    question6 = gr.Radio(
+                        scale=0.5,
+                        choices=[
+                            ("Strongly disagree", 1),
+                            ("Disagree", 2),
+                            ("Neither agree nor disagree", 3),
+                            ("Agree", 4),
+                            ("Strongly agree", 5)
+                        ],
+                        label="Are you interested in the response? Would you like to continue the conversation?",
+                        show_label=True,
+                        visible=False,
+                    )
+            with gr.Column():
+                pairwise_question1 = gr.Radio(
                     choices=[
                         ("Strongly disagree", 1),
                         ("Disagree", 2),
@@ -38,11 +120,11 @@ class ConversationForm(PairwiseForm):
                         ("Agree", 4),
                         ("Strongly agree", 5)
                     ],
-                    label="Is the response correct?",
+                    label="A/B_1",
                     show_label=True,
                     visible=False,
                 )
-                question2 = gr.Radio(
+                pairwise_question2 = gr.Radio(
                     choices=[
                         ("Strongly disagree", 1),
                         ("Disagree", 2),
@@ -50,11 +132,11 @@ class ConversationForm(PairwiseForm):
                         ("Agree", 4),
                         ("Strongly agree", 5)
                     ],
-                    label="Is the context of the response consistent?",
+                    label="A/B_2",
                     show_label=True,
                     visible=False,
                 )
-                question3 = gr.Radio(
+                pairwise_question3 = gr.Radio(
                     choices=[
                         ("Strongly disagree", 1),
                         ("Disagree", 2),
@@ -62,7 +144,19 @@ class ConversationForm(PairwiseForm):
                         ("Agree", 4),
                         ("Strongly agree", 5)
                     ],
-                    label="Are you interested in the response? Would you like to continue the conversation?",
+                    label="A/B_3",
+                    show_label=True,
+                    visible=False,
+                )
+                pairwise_question4 = gr.Radio(
+                    choices=[
+                        ("Strongly disagree", 1),
+                        ("Disagree", 2),
+                        ("Neither agree nor disagree", 3),
+                        ("Agree", 4),
+                        ("Strongly agree", 5)
+                    ],
+                    label="A/B_4",
                     show_label=True,
                     visible=False,
                 )
@@ -144,14 +238,18 @@ class ConversationForm(PairwiseForm):
                 queue=False
             ).then(
                 self.__activate_benchmark,
-                outputs=[question1, question2, question3],
+                outputs=[question1, question2, question3, question4, question5, question6,
+                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
                 queue=True,
             )
             
             audio_record.change(
                 self.__save_benchmark,
-                inputs=[name_input, chatbot, question1, question2, question3],
-                outputs=[question1, question2, question3],
+                inputs=[name_input, chatbot,
+                        question1, question2, question3,
+                        question4, question5, question6,
+                        pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
+                outputs=[question1, question2, question3,],
                 queue=True,
             )
 
@@ -213,24 +311,26 @@ class ConversationForm(PairwiseForm):
         return gr.update(interactive=False), gr.update(interactive=False)
     
     def __activate_benchmark(self):
-        return gr.update(value=None, visible=True), \
-                gr.update(value=None, visible=True), \
-                gr.update(value=None, visible=True)
+        return (gr.update(value=None, visible=True), ) * 10
     
-    def __save_benchmark(self, name_input, chatbot, question1, question2, question3):
-        if not question1 and not question2 and not question3:
-            return question1, question2, question3
+    def __save_benchmark(self, name_input, chatbot,
+                         question1, question2, question3,
+                         question4, question5, question6,
+                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4):
+        all_questions = [question1, question2, question3,
+                         question4, question5, question6,
+                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4]
+        if None in all_questions:
+            return tuple(all_questions)
         
         content = dict()
         content["name"] = name_input
         content["speech"] = chatbot[-1][0]
         content["bot_message"] = chatbot[-1][1].split('</audio>')[-1]
-        content["answer"] = [question1, question2, question3]
+        content["answer"] = all_questions
         self.logger.info(f"Benchmark: {str(content)}")
         
-        return gr.update(value=None, visible=False), \
-                gr.update(value=None, visible=False), \
-                gr.update(value=None, visible=False)
+        return (gr.update(value=None, visible=False), ) * 10
     
     def __process(self, history):
         input = history[-1][0]
@@ -247,17 +347,17 @@ class ConversationForm(PairwiseForm):
         transcript, message, speech, message2, speech2 = response
         print(f"- User: {transcript}")
 
-        random_num = random.randrange(2)
-        speech_data = f"data:audio/wav;base64,{speech if random_num == 0 else speech2}"
+        self.random_num = random.randrange(2)
+        speech_data = f"data:audio/wav;base64,{speech if self.random_num == 0 else speech2}"
         output = f"[Model 1]<br/><audio controls autoplay src=\"{speech_data}\" type=\"audio/wav\"></audio>"
-        output += message if random_num == 0 else message2
+        output += message if self.random_num == 0 else message2
         
-        speech_data = f"data:audio/wav;base64,{speech2 if random_num == 0 else speech}"
+        speech_data = f"data:audio/wav;base64,{speech2 if self.random_num == 0 else speech}"
         output += f"<br/><br/>[Model 2]<br/><audio controls src=\"{speech_data}\" type=\"audio/wav\"></audio>"
-        output += message2 if random_num == 0 else message
+        output += message2 if self.random_num == 0 else message
         
-        print(f"- Assistant 1: {message2}")
-        print(f"- Assistant 2: {message}")
+        print(f"- Assistant 1: {message if self.random_num == 0 else message2}")
+        print(f"- Assistant 2: {message2 if self.random_num == 0 else message}")
 
         history[-1] = (transcript, output)
         return history
