@@ -94,7 +94,7 @@ class ConversationForm(PairwiseForm):
                             ("Agree", 4),
                             ("Strongly agree", 5)
                         ],
-                        label="Are you interested in the response? Would you like to continue the conversation?",
+                        label="['Model 1] Are you interested in the response? Would you like to continue the conversation?",
                         show_label=True,
                         visible=False,
                     )
@@ -107,7 +107,7 @@ class ConversationForm(PairwiseForm):
                             ("Agree", 4),
                             ("Strongly agree", 5)
                         ],
-                        label="Are you interested in the response? Would you like to continue the conversation?",
+                        label="[Model 2] Are you interested in the response? Would you like to continue the conversation?",
                         show_label=True,
                         visible=False,
                     )
@@ -120,7 +120,7 @@ class ConversationForm(PairwiseForm):
                         ("Agree", 4),
                         ("Strongly agree", 5)
                     ],
-                    label="A/B_1",
+                    label="Which response makes more sense?",
                     show_label=True,
                     visible=False,
                 )
@@ -132,7 +132,7 @@ class ConversationForm(PairwiseForm):
                         ("Agree", 4),
                         ("Strongly agree", 5)
                     ],
-                    label="A/B_2",
+                    label="Which response is more consistent?",
                     show_label=True,
                     visible=False,
                 )
@@ -144,7 +144,7 @@ class ConversationForm(PairwiseForm):
                         ("Agree", 4),
                         ("Strongly agree", 5)
                     ],
-                    label="A/B_3",
+                    label="Which response is more interesting?",
                     show_label=True,
                     visible=False,
                 )
@@ -156,26 +156,33 @@ class ConversationForm(PairwiseForm):
                         ("Agree", 4),
                         ("Strongly agree", 5)
                     ],
-                    label="A/B_4",
+                    label="Based on your current response,\
+                        which assistant would you prefer to have a longer conversation with?\
+                            The conversation will continue with the assistant you choose.",
                     show_label=True,
                     visible=False,
                 )
-            with gr.Row():
-                with gr.Column(scale=0.85):
-                    audio_record = gr.Audio(
+            with gr.Column():
+                audio_record = gr.Audio(
                         show_label=False,
                         source="microphone",
                         type="filepath",
-                    )
-                with gr.Column(scale=0.15, min_width=0):
-                    audio_file = gr.UploadButton(
-                        "📁",
-                        file_types=["audio"],
-                    )
-            with gr.Row():
+                )
+            with gr.Column():
+                reset_button = gr.Button(
+                    "Reset this message",
+                    visible=False
+                )
+            with gr.Column():
                 text_input = gr.Textbox(show_label=False)
                 text_input.style(container=False)
-            with gr.Row():
+            with gr.Column():
+                finish_message = gr.Textbox(
+                    "Thank you! :)",
+                    visible=False,
+                    show_label=False
+                )
+            with gr.Column():
                 finish_button = gr.Button("Finish this conversation")
             with gr.Row():
                 with gr.Column(scale=0.7):
@@ -241,6 +248,10 @@ class ConversationForm(PairwiseForm):
                 outputs=[question1, question2, question3, question4, question5, question6,
                          pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
                 queue=True,
+            ).then(
+                lambda: gr.update(visible=True),
+                outputs=[reset_button],
+                queue=False
             )
             
             audio_record.change(
@@ -253,29 +264,34 @@ class ConversationForm(PairwiseForm):
                          question4, question5, question6,
                          pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
                 queue=True,
-            )
-
-            audio_file.upload(
-                self.__add_audio,
-                inputs=[chatbot, audio_file],
-                outputs=[chatbot, audio_file],
-                queue=True,
             ).then(
-                self.__process,
-                inputs=chatbot,
-                outputs=chatbot,
+                lambda: gr.update(visible=False),
+                outputs=[reset_button],
+                queue=False,
+            )
+            
+            reset_button.click(
+                self.__reset,
+                inputs=name_input,
+                outputs=[question1, question2, question3,
+                         question4, question5, question6,
+                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
                 queue=True
             ).then(
-                lambda: gr.update(interactive=True),
+                lambda: (gr.update(value=None),) * 2,
                 inputs=None,
-                outputs=[audio_file],
+                outputs=[chatbot, audio_record],
+                queue=False
+            ).then(
+                lambda: gr.update(visible=False),
+                outputs=[reset_button],
                 queue=False
             )
             
             finish_button.click(
                 self.__deactivate_assistant,
                 inputs=None,
-                outputs=[chatbot, audio_record, audio_file, text_input, finish_button],
+                outputs=[chatbot, audio_record, text_input, finish_button],
                 queue=True,
             ).then(
                 self.__activate_assistant,
@@ -288,6 +304,11 @@ class ConversationForm(PairwiseForm):
                 self.__submit,
                 inputs=[name_input, last_question],
                 outputs=[last_question, submit_button],
+                queue=True
+            ).then(
+                lambda: gr.update(visible=True),
+                inputs=None,
+                outputs=[finish_message],
                 queue=False
             )
         
@@ -371,12 +392,15 @@ class ConversationForm(PairwiseForm):
         history[-1] = (transcript, output)
         return history
     
+    def __reset(self, name_input):
+        content = dict()
+        content['name_input'] = name_input
+        content['message'] = "The conversation history has been reset."
+        self.logger.info(f"Benchmark: {str(content)}")
+        return (gr.update(value=None, visible=False), ) * 10
+    
     def __deactivate_assistant(self):
-        return gr.update(visible=False), \
-                gr.update(visible=False), \
-                gr.update(visible=False), \
-                gr.update(visible=False), \
-                gr.update(visible=False)
+        return (gr.update(visible=False), ) * 4
     
     def __activate_assistant(self):
         return gr.update(visible=True), gr.update(visible=True)
