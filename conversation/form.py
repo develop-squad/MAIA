@@ -249,7 +249,9 @@ class ConversationForm(PairwiseForm):
                         question1, question2, question3,
                         question4, question5, question6,
                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
-                outputs=[question1, question2, question3,],
+                outputs=[question1, question2, question3,
+                         question4, question5, question6,
+                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
                 queue=True,
             )
 
@@ -324,7 +326,7 @@ class ConversationForm(PairwiseForm):
             return tuple(all_questions)
         
         message1 = chatbot[-1][1].split('</audio>')[1].split('<br/>')[0]
-        message2 = chatbot[-1][1].split('</audio>')[1].split('</audio>')[-1]
+        message2 = chatbot[-1][1].split('</audio>')[-1]
         
         bot_message = dict()
         bot_message['chatgpt'] = message1 if self.random_num == 0 else message2
