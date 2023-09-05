@@ -94,7 +94,7 @@ class ConversationForm(PairwiseForm):
                             ("Agree", 4),
                             ("Strongly agree", 5)
                         ],
-                        label="['Model 1] Are you interested in the response? Would you like to continue the conversation?",
+                        label="[Model 1] Are you interested in the response? Would you like to continue the conversation?",
                         show_label=True,
                         visible=False,
                     )
@@ -400,7 +400,8 @@ class ConversationForm(PairwiseForm):
         return (gr.update(value=None, visible=False), ) * 10
     
     def __deactivate_assistant(self):
-        return (gr.update(visible=False), ) * 4
+        return gr.update(value=None, visible=False),\
+            gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
     
     def __activate_assistant(self):
         return gr.update(visible=True), gr.update(visible=True)
