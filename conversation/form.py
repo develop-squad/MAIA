@@ -20,12 +20,12 @@ class ConversationForm(PairwiseForm):
 
             with gr.Row():
                 with gr.Column(scale=0.85):
-                    name_input = gr.Textbox(
-                        label="Name",
+                    id_input = gr.Textbox(
+                        label="MTurk Worker ID",
                         show_label=True
                     )
                 with gr.Column(scale=0.15, min_width=0):
-                    name_button = gr.Button("Save name")
+                    id_button = gr.Button("Save MTurk Worker ID")
 
             chatbot = gr.Chatbot(elem_id="chatbot")
 
@@ -221,10 +221,10 @@ class ConversationForm(PairwiseForm):
                 queue=False
             )
 
-            name_button.click(
-                self.__save_name,
-                inputs=[name_input, name_button],
-                outputs=[name_input, name_button],
+            id_button.click(
+                self.__save_id,
+                inputs=[id_input, id_button],
+                outputs=[id_input, id_button],
                 queue=False,
             )
 
@@ -256,7 +256,7 @@ class ConversationForm(PairwiseForm):
             
             audio_record.change(
                 self.__save_benchmark,
-                inputs=[name_input, chatbot,
+                inputs=[id_input, chatbot,
                         question1, question2, question3,
                         question4, question5, question6,
                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
@@ -272,7 +272,7 @@ class ConversationForm(PairwiseForm):
             
             reset_button.click(
                 self.__reset,
-                inputs=name_input,
+                inputs=id_input,
                 outputs=[question1, question2, question3,
                          question4, question5, question6,
                          pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
@@ -302,7 +302,7 @@ class ConversationForm(PairwiseForm):
             
             submit_button.click(
                 self.__submit,
-                inputs=[name_input, last_question],
+                inputs=[id_input, last_question],
                 outputs=[last_question, submit_button],
                 queue=True
             ).then(
@@ -328,15 +328,15 @@ class ConversationForm(PairwiseForm):
         history = history + [((audio_file.name,), None)]
         return history, gr.update(value="", interactive=False)
     
-    def __save_name(self, name_input, name_button):
-        if not name_input:
-            return name_input, name_button
+    def __save_id(self, id_input, id_button):
+        if not id_input:
+            return id_input, id_button
         return gr.update(interactive=False), gr.update(interactive=False)
     
     def __activate_benchmark(self):
         return (gr.update(value=None, visible=True), ) * 10
     
-    def __save_benchmark(self, name_input, chatbot,
+    def __save_benchmark(self, id_input, chatbot,
                          question1, question2, question3,
                          question4, question5, question6,
                          pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4):
@@ -354,7 +354,7 @@ class ConversationForm(PairwiseForm):
         bot_message['palm'] = message2 if self.random_num == 0 else message1
         
         content = dict()
-        content["name"] = name_input
+        content["mturk_worker_id"] = id_input
         content["speech"] = chatbot[-1][0]
         content["bot_message"] = bot_message
         content["answer"] = all_questions
@@ -392,9 +392,9 @@ class ConversationForm(PairwiseForm):
         history[-1] = (transcript, output)
         return history
     
-    def __reset(self, name_input):
+    def __reset(self, id_input):
         content = dict()
-        content['name_input'] = name_input
+        content['mturk_worker_id'] = id_input
         content['message'] = "The conversation history has been reset."
         self.logger.info(f"Benchmark: {str(content)}")
         return (gr.update(value=None, visible=False), ) * 10
@@ -406,9 +406,9 @@ class ConversationForm(PairwiseForm):
     def __activate_assistant(self):
         return gr.update(visible=True), gr.update(visible=True)
     
-    def __submit(self, name_input, last_question):
+    def __submit(self, id_input, last_question):
         content = dict()
-        content["name"] = name_input
+        content["mturk_worker_id"] = id_input
         content["last_answer"] = last_question
         self.logger.info(f"Benchmark: {str(content)}")
         
