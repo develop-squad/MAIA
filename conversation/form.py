@@ -1,6 +1,7 @@
 import gradio as gr
 import logging
 import random
+import os
 from utils.pairwise_form import PairwiseForm 
 
 class ConversationForm(PairwiseForm):
@@ -18,24 +19,306 @@ class ConversationForm(PairwiseForm):
         with gr.Blocks(css="#chatbot") as form:
             gr.HTML(f"<h1 style=\"text-align: center;\">{self.title}</h1>")
 
-            with gr.Row():
-                with gr.Column(scale=0.85):
-                    id_input = gr.Textbox(
-                        label="MTurk Worker ID",
+            with gr.Tab("IRB Agreement and Experiment Description"):
+                gr.Markdown("## IRB Agreement")
+                irb_agreement = gr.Radio(
+                    show_label=False,
+                    choices=[("Yes", 1), ("No", 0)]
+                )
+                with gr.Column():
+                    gr.Markdown("## Experiment description")
+                    gr.Image(
+                        "conversation/images/explain_image1.png",
+                        show_label=False,
+                        show_download_button=False
+                    )
+                    gr.Markdown("1. Input your MTurk Worker ID and click 'Save MTurk Worker ID' button")
+                    gr.Image(
+                        "conversation/images/explain_image1.png",
+                        show_label=False,
+                        show_download_button=False
+                    )
+                    gr.Markdown("2. Input your MTurk Worker ID and click 'Save MTurk Worker ID' button")
+            with gr.Tab("Usage guide"):
+                with gr.Column():
+                    gr.Markdown("## System guide")
+                    gr.Image(
+                        "conversation/images/explain_image1.png",
+                        show_label=False,
+                        show_download_button=False
+                    )
+                    gr.Markdown("1. Input your MTurk Worker ID and click \"Save MTurk Worker ID\" button.")
+                    
+                    gr.Image(
+                        "conversation/images/explain_image1.png",
+                        show_label=False,
+                        show_download_button=False
+                    )
+                    gr.Markdown("2. Click \"Record\" button to input audio.")
+                    
+                    gr.Image(
+                        "conversation/images/explain_image1.png",
+                        show_label=False,
+                        show_download_button=False
+                    )
+                    gr.Markdown("3. Please wait for IA to answer.")
+                    
+                    gr.Image(
+                        "conversation/images/explain_image1.png",
+                        show_label=False,
+                        show_download_button=False
+                    )
+                    gr.Markdown("4. Model evaluation")
+                    
+                    gr.Image(
+                        "conversation/images/explain_image1.png",
+                        show_label=False,
+                        show_download_button=False
+                    )
+                    gr.Markdown("5. 녹음된 음성 위의 x 버튼을 누르고, 다시 1부터 반복")
+                    
+                    gr.Image(
+                        "conversation/images/explain_image1.png",
+                        show_label=False,
+                        show_download_button=False
+                    )
+                    gr.Markdown("6. Last evaluation")
+                    
+                    gr.Image(
+                        "conversation/images/explain_image1.png",
+                        show_label=False,
+                        show_download_button=False
+                    )
+                    gr.Markdown("7. 1~6과정을 3번 반복")
+                    
+                    gr.Image(
+                        "conversation/images/explain_image1.png",
+                        show_label=False,
+                        show_download_button=False
+                    )
+                    gr.Markdown("8. IA와 자유롭게 5턴 이상 대화")
+                    
+                    gr.Image(
+                        "conversation/images/explain_image1.png",
+                        show_label=False,
+                        show_download_button=False
+                    )
+                    gr.Markdown("9. 사용성 평가")
+            with gr.Tab("Guide for Situation"):
+                with gr.Column():
+                    gr.Markdown("### 1. 당신의 물건 하나를 선정하여 어디에 있는지 어시스턴트에게 알려주어라.")
+                    gr.Markdown("### 2. 그 물건과 다른 토픽으로 대화를 5턴 해보아라.")
+                    gr.Markdown("### 3. 처음 이야기한 물건을 어시스턴트가 기억하고 있는지 구체적으로 질문해 보아라.")
+            with gr.Tab("System"):
+                with gr.Row():
+                    with gr.Column(scale=0.8):
+                        id_input = gr.Textbox(
+                            label="MTurk Worker ID",
+                            show_label=True
+                        )
+                    with gr.Column(scale=0.2, min_width=0):
+                        save_id_button = gr.Button("Save MTurk Worker ID")
+
+                chatbot = gr.Chatbot(
+                    elem_id="chatbot",
+                    visible=False
+                )
+
+                with gr.Column():
+                    with gr.Row():
+                        question1 = gr.Radio(
+                            scale=0.5,
+                            choices=[
+                                ("Strongly disagree", 1),
+                                ("Disagree", 2),
+                                ("Neither agree nor disagree", 3),
+                                ("Agree", 4),
+                                ("Strongly agree", 5)
+                            ],
+                            label="[Model 1] Is the response correct?",
+                            show_label=True,
+                            visible=False,
+                        )
+                        question4 = gr.Radio(
+                            scale=0.5,
+                            choices=[
+                                ("Strongly disagree", 1),
+                                ("Disagree", 2),
+                                ("Neither agree nor disagree", 3),
+                                ("Agree", 4),
+                                ("Strongly agree", 5)
+                            ],
+                            label="[Model 2] Is the response correct?",
+                            show_label=True,
+                            visible=False,
+                        )
+                    with gr.Row():
+                        question2 = gr.Radio(
+                            scale=0.5,
+                            choices=[
+                                ("Strongly disagree", 1),
+                                ("Disagree", 2),
+                                ("Neither agree nor disagree", 3),
+                                ("Agree", 4),
+                                ("Strongly agree", 5)
+                            ],
+                            label="[Model 1] Is the context of the response consistent?",
+                            show_label=True,
+                            visible=False,
+                        )
+                        question5 = gr.Radio(
+                            scale=0.5,
+                            choices=[
+                                ("Strongly disagree", 1),
+                                ("Disagree", 2),
+                                ("Neither agree nor disagree", 3),
+                                ("Agree", 4),
+                                ("Strongly agree", 5)
+                            ],
+                            label="[Model 2] Is the context of the response consistent?",
+                            show_label=True,
+                            visible=False,
+                        )
+                    with gr.Row():
+                        question3 = gr.Radio(
+                            scale=0.5,
+                            choices=[
+                                ("Strongly disagree", 1),
+                                ("Disagree", 2),
+                                ("Neither agree nor disagree", 3),
+                                ("Agree", 4),
+                                ("Strongly agree", 5)
+                            ],
+                            label="[Model 1] Are you interested in the response? Would you like to continue the conversation?",
+                            show_label=True,
+                            visible=False,
+                        )
+                        question6 = gr.Radio(
+                            scale=0.5,
+                            choices=[
+                                ("Strongly disagree", 1),
+                                ("Disagree", 2),
+                                ("Neither agree nor disagree", 3),
+                                ("Agree", 4),
+                                ("Strongly agree", 5)
+                            ],
+                            label="[Model 2] Are you interested in the response? Would you like to continue the conversation?",
+                            show_label=True,
+                            visible=False,
+                        )
+                with gr.Column():
+                    pairwise_question1 = gr.Radio(
+                        choices=[
+                            ("Strongly disagree", 1),
+                            ("Disagree", 2),
+                            ("Neither agree nor disagree", 3),
+                            ("Agree", 4),
+                            ("Strongly agree", 5)
+                        ],
+                        label="Which response makes more sense?",
+                        show_label=True,
+                        visible=False,
+                    )
+                    pairwise_question2 = gr.Radio(
+                        choices=[
+                            ("Strongly disagree", 1),
+                            ("Disagree", 2),
+                            ("Neither agree nor disagree", 3),
+                            ("Agree", 4),
+                            ("Strongly agree", 5)
+                        ],
+                        label="Which response is more consistent?",
+                        show_label=True,
+                        visible=False,
+                    )
+                    pairwise_question3 = gr.Radio(
+                        choices=[
+                            ("Strongly disagree", 1),
+                            ("Disagree", 2),
+                            ("Neither agree nor disagree", 3),
+                            ("Agree", 4),
+                            ("Strongly agree", 5)
+                        ],
+                        label="Which response is more interesting?",
+                        show_label=True,
+                        visible=False,
+                    )
+                    pairwise_question4 = gr.Radio(
+                        choices=[
+                            ("Strongly disagree", 1),
+                            ("Disagree", 2),
+                            ("Neither agree nor disagree", 3),
+                            ("Agree", 4),
+                            ("Strongly agree", 5)
+                        ],
+                        label="Based on your current response,\
+                            which assistant would you prefer to have a longer conversation with?\
+                                The conversation will continue with the assistant you choose.",
+                        show_label=True,
+                        visible=False,
+                    )
+                with gr.Column():
+                    audio_record = gr.Audio(
+                        show_label=False,
+                        source="microphone",
+                        type="filepath",
+                        visible=False,
+                    )
+                with gr.Column():
+                    reset_button = gr.Button(
+                        "Reset this message",
+                        visible=False
+                    )
+                with gr.Column():
+                    text_input = gr.Textbox(
+                        show_label=False,
+                        visible=False
+                    )
+                    text_input.style(container=False)
+                with gr.Column():
+                    finish_message = gr.Textbox(
+                        "Thank you! :)",
+                        visible=False,
+                        show_label=False
+                    )
+                with gr.Column():
+                    finish_button = gr.Button(
+                        "Finish this conversation",
+                        visible=False
+                    )
+                with gr.Row():
+                    with gr.Column(scale=0.7):
+                        last_question = gr.Radio(
+                            choices=[
+                                ("Strongly disagree", 1),
+                                ("Disagree", 2),
+                                ("Neither agree nor disagree", 3),
+                                ("Agree", 4),
+                                ("Strongly agree", 5)
+                            ],
+                            label="How was the conversation?",
+                            show_label=True,
+                            visible=False,
+                        )
+                    with gr.Column(scale=0.3, min_width=0):
+                        submit_button = gr.Button(
+                            "Submit",
+                            visible=False,
+                        )
+            with gr.Tab("Usability Evaluation"):
+                with gr.Column():
+                    usability_question1 = gr.Radio(
+                        choices=[
+                            ("Strongly disagree", 1),
+                            ("Disagree", 2),
+                            ("Neither agree nor disagree", 3),
+                            ("Agree", 4),
+                            ("Strongly agree", 5)
+                        ],
+                        label="I think that I would like to use this system frequently.",
                         show_label=True
                     )
-                with gr.Column(scale=0.15, min_width=0):
-                    save_id_button = gr.Button("Save MTurk Worker ID")
-
-            chatbot = gr.Chatbot(
-                elem_id="chatbot",
-                visible=False
-            )
-
-            with gr.Column():
-                with gr.Row():
-                    question1 = gr.Radio(
-                        scale=0.5,
+                    usability_question2 = gr.Radio(
                         choices=[
                             ("Strongly disagree", 1),
                             ("Disagree", 2),
@@ -43,12 +326,10 @@ class ConversationForm(PairwiseForm):
                             ("Agree", 4),
                             ("Strongly agree", 5)
                         ],
-                        label="[Model 1] Is the response correct?",
+                        label="I found the system unnecessarily complex.",
                         show_label=True,
-                        visible=False,
                     )
-                    question4 = gr.Radio(
-                        scale=0.5,
+                    usability_question3 = gr.Radio(
                         choices=[
                             ("Strongly disagree", 1),
                             ("Disagree", 2),
@@ -56,13 +337,10 @@ class ConversationForm(PairwiseForm):
                             ("Agree", 4),
                             ("Strongly agree", 5)
                         ],
-                        label="[Model 2] Is the response correct?",
-                        show_label=True,
-                        visible=False,
+                        label="I thought the system was easy to use.",
+                        show_label=True
                     )
-                with gr.Row():
-                    question2 = gr.Radio(
-                        scale=0.5,
+                    usability_question4 = gr.Radio(
                         choices=[
                             ("Strongly disagree", 1),
                             ("Disagree", 2),
@@ -70,12 +348,10 @@ class ConversationForm(PairwiseForm):
                             ("Agree", 4),
                             ("Strongly agree", 5)
                         ],
-                        label="[Model 1] Is the context of the response consistent?",
-                        show_label=True,
-                        visible=False,
+                        label="I think that I would need the support of a technical person to be able to use this system.",
+                        show_label=True
                     )
-                    question5 = gr.Radio(
-                        scale=0.5,
+                    usability_question5 = gr.Radio(
                         choices=[
                             ("Strongly disagree", 1),
                             ("Disagree", 2),
@@ -83,13 +359,10 @@ class ConversationForm(PairwiseForm):
                             ("Agree", 4),
                             ("Strongly agree", 5)
                         ],
-                        label="[Model 2] Is the context of the response consistent?",
-                        show_label=True,
-                        visible=False,
+                        label="I found the various functions in this system were well integrated.",
+                        show_label=True
                     )
-                with gr.Row():
-                    question3 = gr.Radio(
-                        scale=0.5,
+                    usability_question6 = gr.Radio(
                         choices=[
                             ("Strongly disagree", 1),
                             ("Disagree", 2),
@@ -97,12 +370,10 @@ class ConversationForm(PairwiseForm):
                             ("Agree", 4),
                             ("Strongly agree", 5)
                         ],
-                        label="[Model 1] Are you interested in the response? Would you like to continue the conversation?",
-                        show_label=True,
-                        visible=False,
+                        label="I thought there was too much inconsistency in this system.",
+                        show_label=True
                     )
-                    question6 = gr.Radio(
-                        scale=0.5,
+                    usability_question7 = gr.Radio(
                         choices=[
                             ("Strongly disagree", 1),
                             ("Disagree", 2),
@@ -110,93 +381,10 @@ class ConversationForm(PairwiseForm):
                             ("Agree", 4),
                             ("Strongly agree", 5)
                         ],
-                        label="[Model 2] Are you interested in the response? Would you like to continue the conversation?",
-                        show_label=True,
-                        visible=False,
+                        label="I would imagine that most people would learn to use this system very quickly.",
+                        show_label=True
                     )
-            with gr.Column():
-                pairwise_question1 = gr.Radio(
-                    choices=[
-                        ("Strongly disagree", 1),
-                        ("Disagree", 2),
-                        ("Neither agree nor disagree", 3),
-                        ("Agree", 4),
-                        ("Strongly agree", 5)
-                    ],
-                    label="Which response makes more sense?",
-                    show_label=True,
-                    visible=False,
-                )
-                pairwise_question2 = gr.Radio(
-                    choices=[
-                        ("Strongly disagree", 1),
-                        ("Disagree", 2),
-                        ("Neither agree nor disagree", 3),
-                        ("Agree", 4),
-                        ("Strongly agree", 5)
-                    ],
-                    label="Which response is more consistent?",
-                    show_label=True,
-                    visible=False,
-                )
-                pairwise_question3 = gr.Radio(
-                    choices=[
-                        ("Strongly disagree", 1),
-                        ("Disagree", 2),
-                        ("Neither agree nor disagree", 3),
-                        ("Agree", 4),
-                        ("Strongly agree", 5)
-                    ],
-                    label="Which response is more interesting?",
-                    show_label=True,
-                    visible=False,
-                )
-                pairwise_question4 = gr.Radio(
-                    choices=[
-                        ("Strongly disagree", 1),
-                        ("Disagree", 2),
-                        ("Neither agree nor disagree", 3),
-                        ("Agree", 4),
-                        ("Strongly agree", 5)
-                    ],
-                    label="Based on your current response,\
-                        which assistant would you prefer to have a longer conversation with?\
-                            The conversation will continue with the assistant you choose.",
-                    show_label=True,
-                    visible=False,
-                )
-            with gr.Column():
-                audio_record = gr.Audio(
-                    show_label=False,
-                    source="microphone",
-                    type="filepath",
-                    visible=False,
-                )
-            with gr.Column():
-                reset_button = gr.Button(
-                    "Reset this message",
-                    visible=False
-                )
-            with gr.Column():
-                text_input = gr.Textbox(
-                    show_label=False,
-                    visible=False
-                )
-                text_input.style(container=False)
-            with gr.Column():
-                finish_message = gr.Textbox(
-                    "Thank you! :)",
-                    visible=False,
-                    show_label=False
-                )
-            with gr.Column():
-                finish_button = gr.Button(
-                    "Finish this conversation",
-                    visible=False
-                )
-            with gr.Row():
-                with gr.Column(scale=0.7):
-                    last_question = gr.Radio(
+                    usability_question8 = gr.Radio(
                         choices=[
                             ("Strongly disagree", 1),
                             ("Disagree", 2),
@@ -204,14 +392,30 @@ class ConversationForm(PairwiseForm):
                             ("Agree", 4),
                             ("Strongly agree", 5)
                         ],
-                        label="How was the conversation?",
-                        show_label=True,
-                        visible=False,
+                        label="I found the system very cumbersome to use.",
+                        show_label=True
                     )
-                with gr.Column(scale=0.3, min_width=0):
-                    submit_button = gr.Button(
-                        "Submit",
-                        visible=False,
+                    usability_question9 = gr.Radio(
+                        choices=[
+                            ("Strongly disagree", 1),
+                            ("Disagree", 2),
+                            ("Neither agree nor disagree", 3),
+                            ("Agree", 4),
+                            ("Strongly agree", 5)
+                        ],
+                        label="I felt very confident using the system.",
+                        show_label=True
+                    )
+                    usability_question10 = gr.Radio(
+                        choices=[
+                            ("Strongly disagree", 1),
+                            ("Disagree", 2),
+                            ("Neither agree nor disagree", 3),
+                            ("Agree", 4),
+                            ("Strongly agree", 5)
+                        ],
+                        label="I needed to learn a lot of things before I could get going with this system.",
+                        show_label=True
                     )
             
             text_input.submit(
