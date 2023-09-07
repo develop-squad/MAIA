@@ -19,25 +19,18 @@ class ConversationForm(PairwiseForm):
             gr.HTML(f"<h1 style=\"text-align: center;\">{self.title}</h1>")
 
             with gr.Row():
-                with gr.Column(scale=0.4):
+                with gr.Column(scale=0.85):
                     id_input = gr.Textbox(
                         label="MTurk Worker ID",
                         show_label=True
                     )
-                with gr.Column(scale=0.4):
-                    model_selection = gr.Radio(
-                        scale=0.5,
-                        choices=[
-                            ("Model 1", 1),
-                            ("Model 2", 2)
-                        ],
-                        label="Model Selection",
-                        show_label=True,
-                    )
-                with gr.Column(scale=0.2, min_width=0):
-                    id_button = gr.Button("Save MTurk Worker ID and Model selection")
+                with gr.Column(scale=0.15, min_width=0):
+                    save_id_button = gr.Button("Save MTurk Worker ID")
 
-            chatbot = gr.Chatbot(elem_id="chatbot")
+            chatbot = gr.Chatbot(
+                elem_id="chatbot",
+                visible=False
+            )
 
             with gr.Column():
                 with gr.Row():
@@ -174,9 +167,10 @@ class ConversationForm(PairwiseForm):
                 )
             with gr.Column():
                 audio_record = gr.Audio(
-                        show_label=False,
-                        source="microphone",
-                        type="filepath",
+                    show_label=False,
+                    source="microphone",
+                    type="filepath",
+                    visible=False,
                 )
             with gr.Column():
                 reset_button = gr.Button(
@@ -184,7 +178,10 @@ class ConversationForm(PairwiseForm):
                     visible=False
                 )
             with gr.Column():
-                text_input = gr.Textbox(show_label=False)
+                text_input = gr.Textbox(
+                    show_label=False,
+                    visible=False
+                )
                 text_input.style(container=False)
             with gr.Column():
                 finish_message = gr.Textbox(
@@ -193,7 +190,10 @@ class ConversationForm(PairwiseForm):
                     show_label=False
                 )
             with gr.Column():
-                finish_button = gr.Button("Finish this conversation")
+                finish_button = gr.Button(
+                    "Finish this conversation",
+                    visible=False
+                )
             with gr.Row():
                 with gr.Column(scale=0.7):
                     last_question = gr.Radio(
@@ -231,10 +231,12 @@ class ConversationForm(PairwiseForm):
                 queue=False
             )
 
-            id_button.click(
+            save_id_button.click(
                 self.__save_id,
-                inputs=[id_input, model_selection, id_button],
-                outputs=[id_input, model_selection, id_button],
+                inputs=[id_input, save_id_button,
+                        chatbot, audio_record, text_input, finish_button],
+                outputs=[id_input, save_id_button,
+                         chatbot, audio_record, text_input, finish_button],
                 queue=False,
             )
 
@@ -338,21 +340,17 @@ class ConversationForm(PairwiseForm):
         history = history + [((audio_file.name,), None)]
         return history, gr.update(value="", interactive=False)
     
-    def __save_id(self, id_input, model_selection, id_button):
-        if not id_input or not model_selection:
-            return id_input, model_selection, id_button
-        return (gr.update(interactive=False), ) * 3
+    def __save_id(self, id_input, save_id_button, *args):
+        if not id_input:
+            return id_input, save_id_button
+        return (gr.update(interactive=False), ) * 2 \
+                + (gr.update(visible=True), ) * len(args)
     
     def __activate_benchmark(self):
         return (gr.update(value=None, visible=True), ) * 10
     
-    def __save_benchmark(self, id_input, chatbot,
-                         question1, question2, question3,
-                         question4, question5, question6,
-                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4):
-        all_questions = [question1, question2, question3,
-                         question4, question5, question6,
-                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4]
+    def __save_benchmark(self, id_input, chatbot, *args):
+        all_questions = list(args)
         if None in all_questions:
             return tuple(all_questions)
         
@@ -370,7 +368,7 @@ class ConversationForm(PairwiseForm):
         content["answer"] = all_questions
         self.logger.info(f"Benchmark: {str(content)}")
         
-        return (gr.update(value=None, visible=False), ) * 10
+        return (gr.update(value=None, visible=False), ) * (2 + len(args))
     
     def __process(self, history):
         input = history[-1][0]
