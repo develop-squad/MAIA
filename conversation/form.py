@@ -114,7 +114,7 @@ class ConversationForm(PairwiseForm):
                                 ("Agree", 4),
                                 ("Strongly agree", 5)
                             ],
-                            label="[Model 2] Is the response correct?",
+                            label="[Model 2] Is the response make sense?",
                             show_label=True,
                             visible=False,
                         )
@@ -495,15 +495,9 @@ class ConversationForm(PairwiseForm):
             submit_button.click(
                 self.__submit,
                 inputs=[id_input, last_question],
+                outputs=[last_question, submit_button, usability_message_ui,
+                         finish_message, usability_ui],
                 queue=True,
-            ).then(
-                lambda: (gr.update(visible=False), ) * 3,
-                outputs=[last_question, submit_button, usability_message_ui],
-                queue=True,
-            ).then(
-                lambda: (gr.update(visible=True), ) * 2,
-                outputs=[finish_message, usability_ui],
-                queue=False,
             )
             
             usability_button.click(
@@ -518,20 +512,9 @@ class ConversationForm(PairwiseForm):
                         usability_question7,
                         usability_question8,
                         usability_question9,
-                        usability_question10],
+                        usability_question10,],
+                outputs=[usability_ui, usability_message, usability_message_ui],
                 queue=True
-            ).then(
-                lambda: gr.update(visible=False),
-                outputs=[usability_ui],
-                queue=True
-            ).then(
-                lambda: gr.update(value="### Thank you :)"),
-                outputs=[usability_message],
-                queue=True
-            ).then(
-                lambda: gr.update(visible=True),
-                outputs=[usability_message_ui],
-                queue=False
             )
         
         return form
@@ -630,6 +613,7 @@ class ConversationForm(PairwiseForm):
         return gr.update(visible=True), gr.update(visible=True)
     
     def __submit(self, id_input, *args):
+        # 에외처리 필요
         content = dict()
         content["mturk_worker_id"] = id_input
         if len(args) == 1:
@@ -637,4 +621,10 @@ class ConversationForm(PairwiseForm):
         else:
             content["usability_answer"] = list(args)
         self.logger.info(f"Benchmark: {str(content)}")
-        return
+        
+        if len(args) == 1:
+            return (gr.update(visible=False), ) * 3 + (gr.update(visible=True), ) * 2
+        else:
+            return gr.update(visible=False), \
+                    gr.update(value="### Thank you :)"), \
+                    gr.update(visible=True)
