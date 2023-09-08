@@ -6,6 +6,50 @@ from utils.pairwise_form import PairwiseForm
 
 class ConversationForm(PairwiseForm):
     def __init__(self, model, title):
+        self.guidance = {
+            "irb_agreement":
+                '''
+                ## IRB Agreement
+                ### 연구과제명 : 기억력 증강 대화 모델을 적용한 인텔리전트 어시스턴트
+                본 연구는 기억력 증강 대화 모델을 통해 인텔리전트 어시스턴트(IA)의 기억 능력을 개선하는 연구입니다.
+                IA는 음성 언어를 사용하여 사람과의 상호작용하며 일상생활을 지능적으로 지원하는 컴퓨터 시스템입니다.
+                기존 IA는 장기적인 기억 능력이 부족하여 사용자와의 과거 대화나 선호도, 상태 및 행동을 충분히 반영하지 못하고 있습니다.
+                본 연구를 통해, IA가 보다 개인화 된 경험을 사용자에게 제공할 수 있도록 하기 위한 방안을 탐구하고자 합니다.
+                ''',
+            "experiment_description":
+                '''
+                ## Experiment Description
+                ### 1. 3가지 상황이 순차적으로 주어집니다.
+                * 상황 1
+                    1. “당신의 물건 하나를 선정하여 어디에 있는지 어시스턴트에게 알려주어라.”
+                    2. “그 물건과 다른 토픽으로 대화를 5턴 해보아라.”
+                    3. “처음 이야기한 물건을 어시스턴트가 기억하고 있는지 구체적으로 질문해 보아라.”
+                * 상황 2
+                    1. “최근 관심 있는 분야에 대해 어시스턴트에게 알려주어라.”
+                    2. “그 분야와 전혀 관련 없는 토픽으로 대화를 5턴 해보아라.”
+                    3. “처음 이야기한 분야를 어시스턴트가 기억하고 있는지 구체적으로 질문해 보아라.”
+                * 상황 3
+                    1. “작성 예정”
+                    2. “작성 예정”
+                    3. “작성 예정”
+                ### 2. 주어지는 상황 가이드에 따라 IA와 대화해주세요.
+                ### 3. 3가지 상황에 한 대화가 끝나면 자유롭게 IA와 대화해주세요.
+                ''',
+            "system_guide":
+                '''
+                ## System guide
+                ### 1. MTurk Worker ID를 입력하고 "Save MTurk Worker ID" 버튼을 클릭하세요.
+                ### 2. "Record from microphone" 버튼을 클릭하고 2초 대기 후 발화를 시작해주세요.
+                ### 3. 발화가 끝났으면 "Stop recording" 버튼을 클릭하여 녹음을 완료해주세요.
+                ### 4. IA가 답변하는 것을 기다려주세요.
+                ### 5. [Model 1]과 [Model 2]에 대한 10가지 항목을 모두 평가해주세요.
+                ### 6. 모두 평가했다면, 녹음된 음성 위의 x 버튼을 클릭하고, 다시 2단계부터 반복하여 주어진 상황을 완료해주세요.
+                ### 7. 주어진 상황에 맞게 대화를 모두 완료했다면, "Finish this conversation" 버튼을 클릭해주세요.
+                ### 8. 최종 평가를 진행하고, "Submit" 버튼을 클릭해주세요.
+                ### 9. "Usability Evaluation" 사용성 평가를 진행해주세요.
+                ### * 중간 단계에서 진행이 안된다면, "Reset" 버튼을 클릭하여 2단계부터 다시 진행할 수 있습니다.
+                '''
+        }
         super().__init__(model=model, title=title)
         self.logger = logging.getLogger()
         self.logger.setLevel(logging.INFO)
@@ -14,101 +58,23 @@ class ConversationForm(PairwiseForm):
         self.file_handler = logging.FileHandler("benchmark.log")
         self.file_handler.setFormatter(self.formatter)
         self.logger.addHandler(self.file_handler)
-    
+
     def _create_form(self) -> gr.Blocks:
         with gr.Blocks(css="#chatbot") as form:
             gr.HTML(f"<h1 style=\"text-align: center;\">{self.title}</h1>")
 
-            with gr.Tab("IRB Agreement and Experiment Description"):
-                gr.Markdown("## IRB Agreement")
+            with gr.Tab("IRB Agreement"):
+                gr.Markdown(self.guidance['irb_agreement'])
                 irb_agreement = gr.Radio(
                     show_label=False,
-                    choices=[("Yes", 1), ("No", 0)]
+                    choices=[("Agree", 1), ("Disagree", 0)],
+                    container=False
                 )
+                irb_button = gr.Button("Save IRB Agreement")
+            with gr.Tab("System Guide"):
                 with gr.Column():
-                    gr.Markdown("## Experiment description")
-                    gr.Image(
-                        "conversation/images/explain_image1.png",
-                        show_label=False,
-                        show_download_button=False
-                    )
-                    gr.Markdown("1. Input your MTurk Worker ID and click 'Save MTurk Worker ID' button")
-                    gr.Image(
-                        "conversation/images/explain_image1.png",
-                        show_label=False,
-                        show_download_button=False
-                    )
-                    gr.Markdown("2. Input your MTurk Worker ID and click 'Save MTurk Worker ID' button")
-            with gr.Tab("Usage guide"):
-                with gr.Column():
-                    gr.Markdown("## System guide")
-                    gr.Image(
-                        "conversation/images/explain_image1.png",
-                        show_label=False,
-                        show_download_button=False
-                    )
-                    gr.Markdown("1. Input your MTurk Worker ID and click \"Save MTurk Worker ID\" button.")
-                    
-                    gr.Image(
-                        "conversation/images/explain_image1.png",
-                        show_label=False,
-                        show_download_button=False
-                    )
-                    gr.Markdown("2. Click \"Record\" button to input audio.")
-                    
-                    gr.Image(
-                        "conversation/images/explain_image1.png",
-                        show_label=False,
-                        show_download_button=False
-                    )
-                    gr.Markdown("3. Please wait for IA to answer.")
-                    
-                    gr.Image(
-                        "conversation/images/explain_image1.png",
-                        show_label=False,
-                        show_download_button=False
-                    )
-                    gr.Markdown("4. Model evaluation")
-                    
-                    gr.Image(
-                        "conversation/images/explain_image1.png",
-                        show_label=False,
-                        show_download_button=False
-                    )
-                    gr.Markdown("5. 녹음된 음성 위의 x 버튼을 누르고, 다시 1부터 반복")
-                    
-                    gr.Image(
-                        "conversation/images/explain_image1.png",
-                        show_label=False,
-                        show_download_button=False
-                    )
-                    gr.Markdown("6. Last evaluation")
-                    
-                    gr.Image(
-                        "conversation/images/explain_image1.png",
-                        show_label=False,
-                        show_download_button=False
-                    )
-                    gr.Markdown("7. 1~6과정을 3번 반복")
-                    
-                    gr.Image(
-                        "conversation/images/explain_image1.png",
-                        show_label=False,
-                        show_download_button=False
-                    )
-                    gr.Markdown("8. IA와 자유롭게 5턴 이상 대화")
-                    
-                    gr.Image(
-                        "conversation/images/explain_image1.png",
-                        show_label=False,
-                        show_download_button=False
-                    )
-                    gr.Markdown("9. 사용성 평가")
-            with gr.Tab("Guide for Situation"):
-                with gr.Column():
-                    gr.Markdown("### 1. 당신의 물건 하나를 선정하여 어디에 있는지 어시스턴트에게 알려주어라.")
-                    gr.Markdown("### 2. 그 물건과 다른 토픽으로 대화를 5턴 해보아라.")
-                    gr.Markdown("### 3. 처음 이야기한 물건을 어시스턴트가 기억하고 있는지 구체적으로 질문해 보아라.")
+                    gr.Markdown(self.guidance['experiment_description'])
+                    gr.Markdown(self.guidance['system_guide'])
             with gr.Tab("System"):
                 with gr.Row():
                     with gr.Column(scale=0.8):
@@ -276,8 +242,8 @@ class ConversationForm(PairwiseForm):
                     )
                     text_input.style(container=False)
                 with gr.Column():
-                    finish_message = gr.Textbox(
-                        "Thank you! :)",
+                    finish_message = gr.Markdown(
+                        "### Thank you! :)",
                         visible=False,
                         show_label=False
                     )
@@ -306,7 +272,9 @@ class ConversationForm(PairwiseForm):
                             visible=False,
                         )
             with gr.Tab("Usability Evaluation"):
-                with gr.Column():
+                with gr.Column(visible=True) as usability_message_ui:
+                    usability_message = gr.Markdown("### Please use the \"System\" first.")
+                with gr.Column(visible=False) as usability_ui:
                     usability_question1 = gr.Radio(
                         choices=[
                             ("Strongly disagree", 1),
@@ -417,6 +385,14 @@ class ConversationForm(PairwiseForm):
                         label="I needed to learn a lot of things before I could get going with this system.",
                         show_label=True
                     )
+                    usability_button = gr.Button("Submit")
+            
+            irb_button.click(
+                self.__save_irb_agreement,
+                inputs=[irb_agreement, irb_button],
+                outputs=[irb_agreement, irb_button],
+                queue=False,
+            )
             
             text_input.submit(
                 self.__add_text,
@@ -519,17 +495,52 @@ class ConversationForm(PairwiseForm):
             submit_button.click(
                 self.__submit,
                 inputs=[id_input, last_question],
-                outputs=[last_question, submit_button],
+                queue=True,
+            ).then(
+                lambda: (gr.update(visible=False), ) * 3,
+                outputs=[last_question, submit_button, usability_message_ui],
+                queue=True,
+            ).then(
+                lambda: (gr.update(visible=True), ) * 2,
+                outputs=[finish_message, usability_ui],
+                queue=False,
+            )
+            
+            usability_button.click(
+                self.__submit,
+                inputs=[id_input,
+                        usability_question1,
+                        usability_question2,
+                        usability_question3,
+                        usability_question4,
+                        usability_question5,
+                        usability_question6,
+                        usability_question7,
+                        usability_question8,
+                        usability_question9,
+                        usability_question10],
+                queue=True
+            ).then(
+                lambda: gr.update(visible=False),
+                outputs=[usability_ui],
+                queue=True
+            ).then(
+                lambda: gr.update(value="### Thank you :)"),
+                outputs=[usability_message],
                 queue=True
             ).then(
                 lambda: gr.update(visible=True),
-                inputs=None,
-                outputs=[finish_message],
+                outputs=[usability_message_ui],
                 queue=False
             )
         
         return form
 
+    def __save_irb_agreement(self, irb_agreement, irb_button):
+        if not irb_agreement:
+            return irb_agreement, irb_button
+        return (gr.update(interactive=False), ) * 2
+    
     def __add_text(self, history, text_input):
         history = history + [(text_input, None)]
         return history, gr.update(value="", interactive=False)
@@ -546,7 +557,7 @@ class ConversationForm(PairwiseForm):
     
     def __save_id(self, id_input, save_id_button, *args):
         if not id_input:
-            return id_input, save_id_button
+            return (id_input, save_id_button, ) + tuple(args)
         return (gr.update(interactive=False), ) * 2 \
                 + (gr.update(visible=True), ) * len(args)
     
@@ -562,8 +573,8 @@ class ConversationForm(PairwiseForm):
         message2 = chatbot[-1][1].split('</audio>')[-1]
         
         bot_message = dict()
-        bot_message['chatgpt'] = message1 if self.random_num == 0 else message2
-        bot_message['palm'] = message2 if self.random_num == 0 else message1
+        bot_message['normal_model'] = message1 if self.random_num == 0 else message2
+        bot_message['augmented_model'] = message2 if self.random_num == 0 else message1
         
         content = dict()
         content["mturk_worker_id"] = id_input
@@ -618,10 +629,12 @@ class ConversationForm(PairwiseForm):
     def __activate_assistant(self):
         return gr.update(visible=True), gr.update(visible=True)
     
-    def __submit(self, id_input, last_question):
+    def __submit(self, id_input, *args):
         content = dict()
         content["mturk_worker_id"] = id_input
-        content["last_answer"] = last_question
+        if len(args) == 1:
+            content["last_answer"] = args[0]
+        else:
+            content["usability_answer"] = list(args)
         self.logger.info(f"Benchmark: {str(content)}")
-        
-        return gr.update(visible=False), gr.update(visible=False)
+        return
