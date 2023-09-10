@@ -6,6 +6,23 @@ from utils.pairwise_form import PairwiseForm
 
 class ConversationForm(PairwiseForm):
     def __init__(self, model, title):
+        self.situations = [
+            [
+                "당신의 물건 하나를 선정하여 어디에 있는지 어시스턴트에게 알려주어라.",
+                "그 물건과 다른 토픽으로 대화를 5턴 해보아라.",
+                "처음 이야기한 물건을 어시스턴트가 기억하고 있는지 구체적으로 질문해 보아라.",
+            ],
+            [
+                "최근 관심 있는 분야에 대해 어시스턴트에게 알려주어라.",
+                "그 분야와 전혀 관련 없는 토픽으로 대화를 5턴 해보아라.",
+                "처음 이야기한 분야를 어시스턴트가 기억하고 있는지 구체적으로 질문해 보아라."
+            ],
+            [
+                "작성 예정",
+                "작성 예정",
+                "작성 에정"
+            ]
+        ]
         self.guidance = {
             "irb_agreement":
                 '''
@@ -17,21 +34,21 @@ class ConversationForm(PairwiseForm):
                 본 연구를 통해, IA가 보다 개인화 된 경험을 사용자에게 제공할 수 있도록 하기 위한 방안을 탐구하고자 합니다.
                 ''',
             "experiment_description":
-                '''
+                f'''
                 ## Experiment Description
                 ### 1. 3가지 상황이 순차적으로 주어집니다.
                 * 상황 1
-                    1. “당신의 물건 하나를 선정하여 어디에 있는지 어시스턴트에게 알려주어라.”
-                    2. “그 물건과 다른 토픽으로 대화를 5턴 해보아라.”
-                    3. “처음 이야기한 물건을 어시스턴트가 기억하고 있는지 구체적으로 질문해 보아라.”
+                1. {self.situations[0][0]}
+                2. {self.situations[0][1]}
+                3. {self.situations[0][2]}
                 * 상황 2
-                    1. “최근 관심 있는 분야에 대해 어시스턴트에게 알려주어라.”
-                    2. “그 분야와 전혀 관련 없는 토픽으로 대화를 5턴 해보아라.”
-                    3. “처음 이야기한 분야를 어시스턴트가 기억하고 있는지 구체적으로 질문해 보아라.”
+                1. {self.situations[1][0]}
+                2. {self.situations[1][1]}
+                3. {self.situations[1][2]}
                 * 상황 3
-                    1. “작성 예정”
-                    2. “작성 예정”
-                    3. “작성 예정”
+                1. {self.situations[2][0]}
+                2. {self.situations[2][1]}
+                3. {self.situations[2][2]}
                 ### 2. 주어지는 상황 가이드에 따라 IA와 대화해주세요.
                 ### 3. 3가지 상황에 한 대화가 끝나면 자유롭게 IA와 대화해주세요.
                 ''',
@@ -50,6 +67,7 @@ class ConversationForm(PairwiseForm):
                 ### * 중간 단계에서 진행이 안된다면, "Reset" 버튼을 클릭하여 2단계부터 다시 진행할 수 있습니다.
                 '''
         }
+        self.situation_idx = 0
         super().__init__(model=model, title=title)
         self.logger = logging.getLogger()
         self.logger.setLevel(logging.INFO)
@@ -85,6 +103,15 @@ class ConversationForm(PairwiseForm):
                     with gr.Column(scale=0.2, min_width=0):
                         save_id_button = gr.Button("Save MTurk Worker ID")
 
+                with gr.Column():
+                    situation_title = gr.Markdown("## Current situation guide",
+                                                  visible=False)
+                    situation_description = gr.Markdown(f'''
+                                                        1. {self.situations[self.situation_idx][0]}
+                                                        2. {self.situations[self.situation_idx][1]}
+                                                        3. {self.situations[self.situation_idx][2]}
+                                                        ''',
+                                                        visible=False)
                 chatbot = gr.Chatbot(
                     elem_id="chatbot",
                     visible=False
@@ -414,9 +441,9 @@ class ConversationForm(PairwiseForm):
             save_id_button.click(
                 self.__save_id,
                 inputs=[id_input, save_id_button,
-                        chatbot, audio_record, text_input, finish_button],
+                        situation_title, situation_description, chatbot, audio_record, text_input],
                 outputs=[id_input, save_id_button,
-                         chatbot, audio_record, text_input, finish_button],
+                         situation_title, situation_description, chatbot, audio_record, text_input],
                 queue=False,
             )
 
@@ -441,8 +468,8 @@ class ConversationForm(PairwiseForm):
                          pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
                 queue=True,
             ).then(
-                lambda: gr.update(visible=True),
-                outputs=[reset_button],
+                lambda: (gr.update(visible=True), ) *2,
+                outputs=[reset_button, finish_button],
                 queue=False
             )
             
@@ -473,21 +500,21 @@ class ConversationForm(PairwiseForm):
                 lambda: (gr.update(value=None),) * 2,
                 inputs=None,
                 outputs=[chatbot, audio_record],
-                queue=False
+                queue=True
             ).then(
-                lambda: gr.update(visible=False),
-                outputs=[reset_button],
+                lambda: (gr.update(visible=False),) * 2,
+                outputs=[reset_button, finish_button],
                 queue=False
             )
             
             finish_button.click(
-                self.__deactivate_assistant,
-                inputs=None,
-                outputs=[chatbot, audio_record, text_input, finish_button],
+                self.__finish_conversation,
+                inputs=situation_title,
+                outputs=[situation_title, situation_description, chatbot, audio_record, text_input, finish_button],
                 queue=True,
             ).then(
                 self.__activate_assistant,
-                inputs=None,
+                inputs=[last_question, submit_button],
                 outputs=[last_question, submit_button],
                 queue=False
             )
@@ -541,8 +568,7 @@ class ConversationForm(PairwiseForm):
     def __save_id(self, id_input, save_id_button, *args):
         if not id_input:
             return (id_input, save_id_button, ) + tuple(args)
-        return (gr.update(interactive=False), ) * 2 \
-                + (gr.update(visible=True), ) * len(args)
+        return (gr.update(interactive=False), ) * 2 + (gr.update(visible=True), ) * len(args)
     
     def __activate_benchmark(self):
         return (gr.update(value=None, visible=True), ) * 10
@@ -564,6 +590,7 @@ class ConversationForm(PairwiseForm):
         content["speech"] = chatbot[-1][0]
         content["bot_message"] = bot_message
         content["answer"] = all_questions
+        content["situation_index"] = self.situation_idx
         self.logger.info(f"Benchmark: {str(content)}")
         
         return (gr.update(value=None, visible=False), ) * (2 + len(args))
@@ -601,16 +628,61 @@ class ConversationForm(PairwiseForm):
     def __reset(self, id_input):
         content = dict()
         content['mturk_worker_id'] = id_input
+        content["situation_index"] = self.situation_idx
         content['message'] = "The conversation history has been reset."
         self.logger.info(f"Benchmark: {str(content)}")
+        
+        from conversation.prompter import Prompter
+        from models.chatgpt.core import ChatGPT
+            
+        chatgpt = ChatGPT()
+        if type(self.model.generate_1) is type(chatgpt.prompt):
+            self.model.generate_2 = Prompter(chatgpt).prompt
+        else:
+            from models.palm.core import PaLM
+            palm = PaLM()
+            if type(self.model.generate_1) is type(palm.prompt):
+                self.model.generate_2 = Prompter(palm).prompt
+        
         return (gr.update(value=None, visible=False), ) * 10
     
-    def __deactivate_assistant(self):
-        return gr.update(value=None, visible=False),\
-            gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+    def __activate_assistant(self, *args):
+        if self.situation_idx > 2:
+            return (gr.update(visible=True), ) * len(args)
+        else:
+            return args
     
-    def __activate_assistant(self):
-        return gr.update(visible=True), gr.update(visible=True)
+    def __finish_conversation(self, situation_title):
+        self.situation_idx += 1
+        if self.situation_idx > 2:
+            return (gr.update(visible=False), ) * 2 \
+                + (gr.update(value=None, visible=False), ) + (gr.update(visible=False),) * 3
+        else:
+            # situation, chatbot audio_record, text_input, finish_button
+            # situation => 값만 변경
+            # chatbot => 값만 변경 clear
+            # audio_record => 값만 변경..? clear
+            # text_input 값만 변경
+            # finish_button => 그대로
+            
+            from conversation.prompter import Prompter
+            from models.chatgpt.core import ChatGPT
+            
+            chatgpt = ChatGPT()
+            if type(self.model.generate_1) is type(chatgpt.prompt):
+                self.model.generate_2 = Prompter(chatgpt).prompt
+            else:
+                from models.palm.core import PaLM
+                palm = PaLM()
+                if type(self.model.generate_1) is type(palm.prompt):
+                    self.model.generate_2 = Prompter(palm).prompt
+            
+            situation_msg = f'''
+                            1. {self.situations[self.situation_idx][0]}
+                            2. {self.situations[self.situation_idx][1]}
+                            3. {self.situations[self.situation_idx][2]}
+                            '''
+            return (situation_title, gr.update(value=situation_msg), ) + (gr.update(value=None), ) * 3 + (gr.update(visible=False), )
     
     def __submit(self, id_input, *args):
         # 에외처리 필요
