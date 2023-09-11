@@ -6,6 +6,19 @@ from utils.pairwise_form import PairwiseForm
 
 class ConversationForm(PairwiseForm):
     def __init__(self, model, title):
+        self.scales = {
+            "likert": [
+                ("Strongly disagree", 1),
+                ("Disagree", 2),
+                ("Neither agree nor disagree", 3),
+                ("Agree", 4),
+                ("Strongly agree", 5),
+            ],
+            "comparison": [
+                ("Model 1", 1),
+                ("Model 2", 2),
+            ],
+        }
         self.situations = [
             [
                 "당신의 물건 하나를 선정하여 어디에 있는지 어시스턴트에게 알려주어라.",
@@ -122,26 +135,14 @@ class ConversationForm(PairwiseForm):
                     with gr.Row():
                         question1 = gr.Radio(
                             scale=0.5,
-                            choices=[
-                                ("Strongly disagree", 1),
-                                ("Disagree", 2),
-                                ("Neither agree nor disagree", 3),
-                                ("Agree", 4),
-                                ("Strongly agree", 5)
-                            ],
+                            choices=self.scales["likert"],
                             label="[Model 1] Is the response make sence?",
                             show_label=True,
                             visible=False,
                         )
                         question4 = gr.Radio(
                             scale=0.5,
-                            choices=[
-                                ("Strongly disagree", 1),
-                                ("Disagree", 2),
-                                ("Neither agree nor disagree", 3),
-                                ("Agree", 4),
-                                ("Strongly agree", 5)
-                            ],
+                            choices=self.scales["likert"],
                             label="[Model 2] Is the response make sense?",
                             show_label=True,
                             visible=False,
@@ -149,26 +150,14 @@ class ConversationForm(PairwiseForm):
                     with gr.Row():
                         question2 = gr.Radio(
                             scale=0.5,
-                            choices=[
-                                ("Strongly disagree", 1),
-                                ("Disagree", 2),
-                                ("Neither agree nor disagree", 3),
-                                ("Agree", 4),
-                                ("Strongly agree", 5)
-                            ],
+                            choices=self.scales["likert"],
                             label="[Model 1] Is the context of the response consistent?",
                             show_label=True,
                             visible=False,
                         )
                         question5 = gr.Radio(
                             scale=0.5,
-                            choices=[
-                                ("Strongly disagree", 1),
-                                ("Disagree", 2),
-                                ("Neither agree nor disagree", 3),
-                                ("Agree", 4),
-                                ("Strongly agree", 5)
-                            ],
+                            choices=self.scales["likert"],
                             label="[Model 2] Is the context of the response consistent?",
                             show_label=True,
                             visible=False,
@@ -176,26 +165,14 @@ class ConversationForm(PairwiseForm):
                     with gr.Row():
                         question3 = gr.Radio(
                             scale=0.5,
-                            choices=[
-                                ("Strongly disagree", 1),
-                                ("Disagree", 2),
-                                ("Neither agree nor disagree", 3),
-                                ("Agree", 4),
-                                ("Strongly agree", 5)
-                            ],
+                            choices=self.scales["likert"],
                             label="[Model 1] Are you interested in the response? Would you like to continue the conversation?",
                             show_label=True,
                             visible=False,
                         )
                         question6 = gr.Radio(
                             scale=0.5,
-                            choices=[
-                                ("Strongly disagree", 1),
-                                ("Disagree", 2),
-                                ("Neither agree nor disagree", 3),
-                                ("Agree", 4),
-                                ("Strongly agree", 5)
-                            ],
+                            choices=self.scales["likert"],
                             label="[Model 2] Are you interested in the response? Would you like to continue the conversation?",
                             show_label=True,
                             visible=False,
@@ -203,38 +180,26 @@ class ConversationForm(PairwiseForm):
                 with gr.Column():
                     with gr.Row():
                         pairwise_question1 = gr.Radio(
-                            choices=[
-                                ("Model 1", 1),
-                                ("Model 2", 2),
-                            ],
+                            choices=self.scales["comparison"],
                             label="Which response makes more sense?",
                             show_label=True,
                             visible=False,
                         )
                         pairwise_question2 = gr.Radio(
-                            choices=[
-                                ("Model 1", 1),
-                                ("Model 2", 2),
-                            ],
+                            choices=self.scales["comparison"],
                             label="Which response is more consistent?",
                             show_label=True,
                             visible=False,
                         )
                     with gr.Row():
                         pairwise_question3 = gr.Radio(
-                            choices=[
-                                ("Model 1", 1),
-                                ("Model 2", 2),
-                            ],
+                            choices=self.scales["comparison"],
                             label="Which response is more interesting?",
                             show_label=True,
                             visible=False,
                         )
                         pairwise_question4 = gr.Radio(
-                            choices=[
-                                ("Model 1", 1),
-                                ("Model 2", 2),
-                            ],
+                            choices=self.scales["comparison"],
                             label="Who do you prefer to talk to more?",
                             show_label=True,
                             visible=False,
@@ -271,13 +236,7 @@ class ConversationForm(PairwiseForm):
                 with gr.Row():
                     with gr.Column(scale=0.7):
                         last_question = gr.Radio(
-                            choices=[
-                                ("Strongly disagree", 1),
-                                ("Disagree", 2),
-                                ("Neither agree nor disagree", 3),
-                                ("Agree", 4),
-                                ("Strongly agree", 5)
-                            ],
+                            choices=self.scales["likert"],
                             label="How was the conversation?",
                             show_label=True,
                             visible=False,
@@ -292,112 +251,52 @@ class ConversationForm(PairwiseForm):
                     usability_message = gr.Markdown("### Please use the \"System\" first.")
                 with gr.Column(visible=False) as usability_ui:
                     usability_question1 = gr.Radio(
-                        choices=[
-                            ("Strongly disagree", 1),
-                            ("Disagree", 2),
-                            ("Neither agree nor disagree", 3),
-                            ("Agree", 4),
-                            ("Strongly agree", 5)
-                        ],
+                        choices=self.scales["likert"],
                         label="I think that I would like to use this system frequently.",
                         show_label=True
                     )
                     usability_question2 = gr.Radio(
-                        choices=[
-                            ("Strongly disagree", 1),
-                            ("Disagree", 2),
-                            ("Neither agree nor disagree", 3),
-                            ("Agree", 4),
-                            ("Strongly agree", 5)
-                        ],
+                        choices=self.scales["likert"],
                         label="I found the system unnecessarily complex.",
                         show_label=True,
                     )
                     usability_question3 = gr.Radio(
-                        choices=[
-                            ("Strongly disagree", 1),
-                            ("Disagree", 2),
-                            ("Neither agree nor disagree", 3),
-                            ("Agree", 4),
-                            ("Strongly agree", 5)
-                        ],
+                        choices=self.scales["likert"],
                         label="I thought the system was easy to use.",
                         show_label=True
                     )
                     usability_question4 = gr.Radio(
-                        choices=[
-                            ("Strongly disagree", 1),
-                            ("Disagree", 2),
-                            ("Neither agree nor disagree", 3),
-                            ("Agree", 4),
-                            ("Strongly agree", 5)
-                        ],
+                        choices=self.scales["likert"],
                         label="I think that I would need the support of a technical person to be able to use this system.",
                         show_label=True
                     )
                     usability_question5 = gr.Radio(
-                        choices=[
-                            ("Strongly disagree", 1),
-                            ("Disagree", 2),
-                            ("Neither agree nor disagree", 3),
-                            ("Agree", 4),
-                            ("Strongly agree", 5)
-                        ],
+                        choices=self.scales["likert"],
                         label="I found the various functions in this system were well integrated.",
                         show_label=True
                     )
                     usability_question6 = gr.Radio(
-                        choices=[
-                            ("Strongly disagree", 1),
-                            ("Disagree", 2),
-                            ("Neither agree nor disagree", 3),
-                            ("Agree", 4),
-                            ("Strongly agree", 5)
-                        ],
+                        choices=self.scales["likert"],
                         label="I thought there was too much inconsistency in this system.",
                         show_label=True
                     )
                     usability_question7 = gr.Radio(
-                        choices=[
-                            ("Strongly disagree", 1),
-                            ("Disagree", 2),
-                            ("Neither agree nor disagree", 3),
-                            ("Agree", 4),
-                            ("Strongly agree", 5)
-                        ],
+                        choices=self.scales["likert"],
                         label="I would imagine that most people would learn to use this system very quickly.",
                         show_label=True
                     )
                     usability_question8 = gr.Radio(
-                        choices=[
-                            ("Strongly disagree", 1),
-                            ("Disagree", 2),
-                            ("Neither agree nor disagree", 3),
-                            ("Agree", 4),
-                            ("Strongly agree", 5)
-                        ],
+                        choices=self.scales["likert"],
                         label="I found the system very cumbersome to use.",
                         show_label=True
                     )
                     usability_question9 = gr.Radio(
-                        choices=[
-                            ("Strongly disagree", 1),
-                            ("Disagree", 2),
-                            ("Neither agree nor disagree", 3),
-                            ("Agree", 4),
-                            ("Strongly agree", 5)
-                        ],
+                        choices=self.scales["likert"],
                         label="I felt very confident using the system.",
                         show_label=True
                     )
                     usability_question10 = gr.Radio(
-                        choices=[
-                            ("Strongly disagree", 1),
-                            ("Disagree", 2),
-                            ("Neither agree nor disagree", 3),
-                            ("Agree", 4),
-                            ("Strongly agree", 5)
-                        ],
+                        choices=self.scales["likert"],
                         label="I needed to learn a lot of things before I could get going with this system.",
                         show_label=True
                     )
