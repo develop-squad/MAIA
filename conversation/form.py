@@ -201,42 +201,44 @@ class ConversationForm(PairwiseForm):
                             visible=False,
                         )
                 with gr.Column():
-                    pairwise_question1 = gr.Radio(
-                        choices=[
-                            ("Model 1", 1),
-                            ("Model 2", 2),
-                        ],
-                        label="Which response makes more sense?",
-                        show_label=True,
-                        visible=False,
-                    )
-                    pairwise_question2 = gr.Radio(
-                        choices=[
-                            ("Model 1", 1),
-                            ("Model 2", 2),
-                        ],
-                        label="Which response is more consistent?",
-                        show_label=True,
-                        visible=False,
-                    )
-                    pairwise_question3 = gr.Radio(
-                        choices=[
-                            ("Model 1", 1),
-                            ("Model 2", 2),
-                        ],
-                        label="Which response is more interesting?",
-                        show_label=True,
-                        visible=False,
-                    )
-                    pairwise_question4 = gr.Radio(
-                        choices=[
-                            ("Model 1", 1),
-                            ("Model 2", 2),
-                        ],
-                        label="Who do you prefer to talk to more?",
-                        show_label=True,
-                        visible=False,
-                    )
+                    with gr.Row():
+                        pairwise_question1 = gr.Radio(
+                            choices=[
+                                ("Model 1", 1),
+                                ("Model 2", 2),
+                            ],
+                            label="Which response makes more sense?",
+                            show_label=True,
+                            visible=False,
+                        )
+                        pairwise_question2 = gr.Radio(
+                            choices=[
+                                ("Model 1", 1),
+                                ("Model 2", 2),
+                            ],
+                            label="Which response is more consistent?",
+                            show_label=True,
+                            visible=False,
+                        )
+                    with gr.Row():
+                        pairwise_question3 = gr.Radio(
+                            choices=[
+                                ("Model 1", 1),
+                                ("Model 2", 2),
+                            ],
+                            label="Which response is more interesting?",
+                            show_label=True,
+                            visible=False,
+                        )
+                        pairwise_question4 = gr.Radio(
+                            choices=[
+                                ("Model 1", 1),
+                                ("Model 2", 2),
+                            ],
+                            label="Who do you prefer to talk to more?",
+                            show_label=True,
+                            visible=False,
+                        )
                 with gr.Column():
                     audio_record = gr.Audio(
                         show_label=False,
