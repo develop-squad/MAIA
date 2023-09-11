@@ -9,18 +9,18 @@ class ConversationForm(PairwiseForm):
         self.situations = [
             [
                 "당신의 물건 하나를 선정하여 어디에 있는지 어시스턴트에게 알려주어라.",
-                "그 물건과 다른 토픽으로 대화를 5턴 해보아라.",
+                "건강에 좋은 음식을 주제로 대화를 5턴 해보아라.",
                 "처음 이야기한 물건을 어시스턴트가 기억하고 있는지 구체적으로 질문해 보아라.",
             ],
             [
-                "최근 관심 있는 분야에 대해 어시스턴트에게 알려주어라.",
-                "그 분야와 전혀 관련 없는 토픽으로 대화를 5턴 해보아라.",
-                "처음 이야기한 분야를 어시스턴트가 기억하고 있는지 구체적으로 질문해 보아라."
+                "최근에 복용했던 약이 무엇인지, 언제 복용했는지 어시스턴트에게 알려주어라.",
+                "운동을 주제로 대화를 5턴 해보아라.",
+                "처음에 알려주었던 약에 대해서 어시스턴트가 기억하는 지 질문해보아라."
             ],
             [
-                "작성 예정",
-                "작성 예정",
-                "작성 에정"
+                "어시스턴트에게 스트레스 해소 방법을 질문해보아라.",
+                "주의해야할 질병을 주제로 대화를 5턴 해보아라.",
+                "처음에 어시스턴트가 어떤 스트레스 해소 방법을 알려주었는지 질문해보아라."
             ]
         ]
         self.guidance = {
@@ -62,7 +62,8 @@ class ConversationForm(PairwiseForm):
                 ### 5. [Model 1]과 [Model 2]에 대한 10가지 항목을 모두 평가해주세요.
                 ### 6. 모두 평가했다면, 녹음된 음성 위의 x 버튼을 클릭하고, 다시 2단계부터 반복하여 주어진 상황을 완료해주세요.
                 ### 7. 주어진 상황에 맞게 대화를 모두 완료했다면, "Finish this conversation" 버튼을 클릭해주세요.
-                ### 8. 최종 평가를 진행하고, "Submit" 버튼을 클릭해주세요.
+                ### 8. 다음 상황이 주어집니다. 2단계부터 7단계를 반복해주세요.
+                ### 8. 세 번째 상황까지 모두 완료하고 "Finish this conversation" 버튼을 눌렀다면, 최종 평가를 진행하고 "Submit" 버튼을 클릭해주세요.
                 ### 9. "Usability Evaluation" 사용성 평가를 진행해주세요.
                 ### * 중간 단계에서 진행이 안된다면, "Reset" 버튼을 클릭하여 2단계부터 다시 진행할 수 있습니다.
                 '''
@@ -657,14 +658,7 @@ class ConversationForm(PairwiseForm):
         if self.situation_idx > 2:
             return (gr.update(visible=False), ) * 2 \
                 + (gr.update(value=None, visible=False), ) + (gr.update(visible=False),) * 3
-        else:
-            # situation, chatbot audio_record, text_input, finish_button
-            # situation => 값만 변경
-            # chatbot => 값만 변경 clear
-            # audio_record => 값만 변경..? clear
-            # text_input 값만 변경
-            # finish_button => 그대로
-            
+        else:            
             from conversation.prompter import Prompter
             from models.chatgpt.core import ChatGPT
             
