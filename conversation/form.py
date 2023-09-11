@@ -129,7 +129,7 @@ class ConversationForm(PairwiseForm):
                                 ("Agree", 4),
                                 ("Strongly agree", 5)
                             ],
-                            label="[Model 1] Is the response correct?",
+                            label="[Model 1] Is the response make sence?",
                             show_label=True,
                             visible=False,
                         )
