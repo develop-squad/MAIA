@@ -65,7 +65,7 @@ class ConversationForm(PairwiseForm):
                 ### 8. 다음 상황이 주어집니다. 2단계부터 7단계를 반복해주세요.
                 ### 8. 세 번째 상황까지 모두 완료하고 "Finish this conversation" 버튼을 눌렀다면, 최종 평가를 진행하고 "Submit" 버튼을 클릭해주세요.
                 ### 9. "Usability Evaluation" 사용성 평가를 진행해주세요.
-                ### * 중간 단계에서 진행이 안된다면, "Reset" 버튼을 클릭하여 2단계부터 다시 진행할 수 있습니다.
+                ### * 중간 단계에서 진행이 안된다면, "Reset this conversation" 버튼을 클릭하여 2단계부터 다시 진행할 수 있습니다.
                 '''
         }
         self.situation_idx = 0
@@ -203,11 +203,8 @@ class ConversationForm(PairwiseForm):
                 with gr.Column():
                     pairwise_question1 = gr.Radio(
                         choices=[
-                            ("Strongly disagree", 1),
-                            ("Disagree", 2),
-                            ("Neither agree nor disagree", 3),
-                            ("Agree", 4),
-                            ("Strongly agree", 5)
+                            ("Model 1", 1),
+                            ("Model 2", 2),
                         ],
                         label="Which response makes more sense?",
                         show_label=True,
@@ -215,11 +212,8 @@ class ConversationForm(PairwiseForm):
                     )
                     pairwise_question2 = gr.Radio(
                         choices=[
-                            ("Strongly disagree", 1),
-                            ("Disagree", 2),
-                            ("Neither agree nor disagree", 3),
-                            ("Agree", 4),
-                            ("Strongly agree", 5)
+                            ("Model 1", 1),
+                            ("Model 2", 2),
                         ],
                         label="Which response is more consistent?",
                         show_label=True,
@@ -227,11 +221,8 @@ class ConversationForm(PairwiseForm):
                     )
                     pairwise_question3 = gr.Radio(
                         choices=[
-                            ("Strongly disagree", 1),
-                            ("Disagree", 2),
-                            ("Neither agree nor disagree", 3),
-                            ("Agree", 4),
-                            ("Strongly agree", 5)
+                            ("Model 1", 1),
+                            ("Model 2", 2),
                         ],
                         label="Which response is more interesting?",
                         show_label=True,
@@ -239,15 +230,10 @@ class ConversationForm(PairwiseForm):
                     )
                     pairwise_question4 = gr.Radio(
                         choices=[
-                            ("Strongly disagree", 1),
-                            ("Disagree", 2),
-                            ("Neither agree nor disagree", 3),
-                            ("Agree", 4),
-                            ("Strongly agree", 5)
+                            ("Model 1", 1),
+                            ("Model 2", 2),
                         ],
-                        label="Based on your current response,\
-                            which assistant would you prefer to have a longer conversation with?\
-                                The conversation will continue with the assistant you choose.",
+                        label="Who do you prefer to talk to more?",
                         show_label=True,
                         visible=False,
                     )
@@ -260,7 +246,7 @@ class ConversationForm(PairwiseForm):
                     )
                 with gr.Column():
                     reset_button = gr.Button(
-                        "Reset this message",
+                        "Reset this conversation",
                         visible=False
                     )
                 with gr.Column():
@@ -579,6 +565,15 @@ class ConversationForm(PairwiseForm):
         if None in all_questions:
             return tuple(all_questions)
         
+        # if self.random_num == 0 1=normal, 2=augmented
+        # else 1=augmented, 2=normal
+        if self.random_num == 0:
+            for i in range(-1, -5, -1):
+                all_questions[i] = "normal" if all_questions[i] == 1 else "augmented"
+        else:
+            for i in range(-1, -5, -1):
+                all_questions[i] = "augmented" if all_questions[i] == 1 else "normal"
+
         message1 = chatbot[-1][1].split('</audio>')[1].split('<br/>')[0]
         message2 = chatbot[-1][1].split('</audio>')[-1]
         
