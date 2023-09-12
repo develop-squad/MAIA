@@ -1,3 +1,4 @@
 ## HUMAN SUBJECT Informed Consent
 ### Project Title: Intelligent Assistant with Memory-augmented Conversation Model
 This research aims to improve the memory capabilities of an Intelligent Assistant (IA) through an enhanced memory dialogue model. An IA is a computer system that interacts with humans using voice language, providing intelligent support in daily life. Due to the absence of long-term memory capabilities in existing IAs, they fail to adequately reflect the user's past interactions, preferences, status, and behaviors. Through this research, we aim to explore ways for the IA to offer a more personalized experience to users.
+### Do I understand the experiment and agree to participate in it?
