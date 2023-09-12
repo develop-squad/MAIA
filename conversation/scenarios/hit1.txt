@@ -1,0 +1,3 @@
+Select one of your items and tell HI-MAIA where it is.
+Engage in a 5-turn conversation on healthy foods with HI-MAIA.
+Ask HI-MAIA specifically if it remembers the item you first mentioned.
