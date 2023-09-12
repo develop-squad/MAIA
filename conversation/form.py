@@ -41,8 +41,8 @@ class ConversationForm(PairwiseForm):
             }
         }
         self.data_path = "results"
-        self.text_input_hint="Please use text input when microphone is not working well."
-        self.evaluation_check_msg = "평가 항목을 모두 선택했는지 검사해주세요."
+        self.text_input_hint="If the microphone malfunctions, use text input."
+        self.evaluation_check_msg = "Please complete all survey questions."
 
         super().__init__(model=model, title=title)
         
@@ -539,7 +539,7 @@ class ConversationForm(PairwiseForm):
         else:
             response = self.model.fn(
                 text_input=input,
-                forced_response="I can't process this type of input.",
+                forced_response="This type of input is not supported.",
             )
         transcript, message, message2 = response
         print(f"- User: {transcript}")
