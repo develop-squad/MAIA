@@ -508,16 +508,17 @@ class ConversationForm(PairwiseForm):
                 text_input=input,
                 forced_response="I can't process this type of input.",
             )
-        transcript, message, speech, message2, speech2 = response
+        transcript, message, message2 = response
         print(f"- User: {transcript}")
 
         self.random_num = random.randrange(2)
-        speech_data = f"data:audio/wav;base64,{speech if self.random_num == 0 else speech2}"
-        output = f"[Model 1]<br/><audio controls autoplay src=\"{speech_data}\" type=\"audio/wav\"></audio>"
+        #speech_data = f"data:audio/wav;base64,{speech if self.random_num == 0 else speech2}"
+        #output = f"[Model 1]<br/><audio controls autoplay src=\"{speech_data}\" type=\"audio/wav\"></audio>"
+        output = "[Model 1]<br/>"
         output += message if self.random_num == 0 else message2
         
-        speech_data = f"data:audio/wav;base64,{speech2 if self.random_num == 0 else speech}"
-        output += f"<br/><br/>[Model 2]<br/><audio controls src=\"{speech_data}\" type=\"audio/wav\"></audio>"
+        #speech_data = f"data:audio/wav;base64,{speech2 if self.random_num == 0 else speech}"
+        output += f"<br/><br/>[Model 2]<br/>" #<br/><audio controls src=\"{speech_data}\" type=\"audio/wav\"></audio>"
         output += message2 if self.random_num == 0 else message
         
         print(f"- Assistant 1: {message if self.random_num == 0 else message2}")
