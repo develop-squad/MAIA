@@ -168,7 +168,13 @@ class ConversationForm(PairwiseForm):
                         show_label=False,
                         visible=False
                     )
+                    text_input_message = gr.Markdown("Please use Text input when microphone is not working well.",
+                                                     visible=False)
                     text_input.style(container=False)
+                    text_input_button = gr.Button(
+                        "Save evalution results",
+                        visible=False,
+                    )
                 with gr.Column():
                     finish_message = gr.Markdown(
                         "### Thank you! :)",
@@ -271,14 +277,39 @@ class ConversationForm(PairwiseForm):
                 inputs=None,
                 outputs=[text_input],
                 queue=False
+            ).then(
+                self.__activate_benchmark,
+                outputs=[question1, question2, question3, question4, question5, question6,
+                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
+                queue=True,
+            ).then(
+                lambda: (gr.update(visible=True), ) * 3,
+                outputs=[text_input_button, reset_button, finish_button],
+                queue=False
+            )
+            
+            text_input_button.click(
+                self.__save_benchmark,
+                inputs=[id_input, chatbot,
+                        question1, question2, question3,
+                        question4, question5, question6,
+                        pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
+                outputs=[question1, question2, question3,
+                         question4, question5, question6,
+                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
+                queue=True,
+            ).then(
+                lambda: (gr.update(visible=False), ) * 2,
+                outputs=[reset_button, text_input_button],
+                queue=False,
             )
 
             save_id_button.click(
                 self.__save_id,
                 inputs=[id_input, save_id_button,
-                        situation_title, situation_description, chatbot, audio_record, text_input],
+                        situation_title, situation_description, chatbot, audio_record, text_input, text_input_message],
                 outputs=[id_input, save_id_button,
-                         situation_title, situation_description, chatbot, audio_record, text_input],
+                         situation_title, situation_description, chatbot, audio_record, text_input, text_input_message],
                 queue=False,
             )
 
@@ -337,8 +368,8 @@ class ConversationForm(PairwiseForm):
                 outputs=[chatbot, audio_record],
                 queue=True
             ).then(
-                lambda: (gr.update(visible=False),) * 2,
-                outputs=[reset_button, finish_button],
+                lambda: (gr.update(visible=False),) * 3,
+                outputs=[reset_button, finish_button, text_input_button],
                 queue=False
             )
             
