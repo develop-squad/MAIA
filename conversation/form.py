@@ -29,7 +29,7 @@ class ConversationForm(PairwiseForm):
             "system_usage_instruction": self.__load_guidance("system_usage_instruction"),
         }
         self.situation_idx = 0
-        self.scenario_count = 1
+        self.scenario_count = 0
         self.data = {
             "mturk_worker_id": "N/A",
             "result": {
@@ -295,8 +295,8 @@ class ConversationForm(PairwiseForm):
                 outputs=[ques_row1, ques_row2, ques_row3, pair_row1, pair_row2],
                 queue=True,
             ).then(
-                lambda: gr.update(visible=True),
-                outputs=[btn_row],
+                self.__select_btn,
+                outputs=[btn_row, finish_button],
                 queue=False
             )
             
@@ -329,8 +329,8 @@ class ConversationForm(PairwiseForm):
                 outputs=[ques_row1, ques_row2, ques_row3, pair_row1, pair_row2],
                 queue=True,
             ).then(
-                lambda: gr.update(visible=True),
-                outputs=[btn_row],
+                self.__select_btn,
+                outputs=[btn_row, finish_button],
                 queue=False
             )
             
@@ -380,6 +380,18 @@ class ConversationForm(PairwiseForm):
             
             # finish button
             finish_button.click(
+                self.__save_benchmark,
+                inputs=[id_input, chatbot, situation_description,
+                        question1, question2, question3,
+                        question4, question5, question6,
+                        pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
+                outputs=[ques_row1, ques_row2, ques_row3, pair_row1, pair_row2,
+                         btn_row, situation_description,
+                         question1, question2, question3,
+                         question4, question5, question6,
+                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
+                queue=False,
+            ).then(
                 self.__finish_conversation,
                 inputs=situation_title,
                 outputs=[situation_title, situation_description, chatbot, audio_record, text_input, finish_button],
@@ -422,9 +434,9 @@ class ConversationForm(PairwiseForm):
 
     def __get_current_scenario(self, scenario_count):
         scenario_idx = 0
-        if scenario_count <= 1:
+        if scenario_count == 0:
             scenario_idx = 0
-        elif scenario_count >= 2 and scenario_count <= 6:
+        elif scenario_count >= 1 and scenario_count <= 5:
             scenario_idx = 1
         else:
             scenario_idx = 2
@@ -544,7 +556,7 @@ class ConversationForm(PairwiseForm):
         content['mturk_worker_id'] = id_input
         content["situation_index"] = self.situation_idx
         content['message'] = "The conversation history has been reset."
-        self.scenario_count = 1
+        self.scenario_count = 0
         self.logger.info(f"Benchmark: {str(content)}")
         self.data["result"][f"situation{self.situation_idx + 1}"].clear()
 
@@ -562,8 +574,13 @@ class ConversationForm(PairwiseForm):
         
         return (gr.update(value=None),) * 10 + (gr.update(visible=False),) * 5
     
+    def __select_btn(self):
+        if self.scenario_count >= 6:
+            return gr.update(visible=False), gr.update(visible=True)
+        return gr.update(visible=True), gr.update(visible=False)
+    
     def __finish_conversation(self, situation_title):
-        self.scenario_count = 1
+        self.scenario_count = 0
         self.situation_idx += 1
         if self.situation_idx > 2:
             return (gr.update(visible=False), ) * 2 \
