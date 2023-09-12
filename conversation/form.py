@@ -396,7 +396,7 @@ class ConversationForm(PairwiseForm):
                 outputs=[situation_title, situation_description, chatbot, audio_record, text_input, finish_button],
                 queue=True,
             ).then(
-                lambda: gr.update(visible=True),
+                lambda: gr.update(visible=True if self.situation_idx >= 2 else False),
                 inputs=None,
                 outputs=[last_row],
                 queue=False,
@@ -481,7 +481,7 @@ class ConversationForm(PairwiseForm):
     def __save_benchmark(self, id_input, chatbot, situation_description, *args):
         all_questions = list(args)
         if None in all_questions:
-            return (gr.update(visible=True),) * 6 + (situation_description,) + tuple(all_questions)
+            return (gr.update(visible=True),) * 5 + (situation_description,) + tuple(all_questions)
         
         # if self.random_num == 0 1=normal, 2=augmented
         # else 1=augmented, 2=normal
@@ -576,7 +576,7 @@ class ConversationForm(PairwiseForm):
     def __select_btn(self):
         if self.scenario_count >= 6:
             return gr.update(visible=False), gr.update(visible=True)
-        return gr.update(visible=True), gr.update(visible=False)
+        return gr.update(visible=True), gr.update(visible=True)
     
     def __finish_conversation(self, situation_title):
         self.scenario_count = 0
