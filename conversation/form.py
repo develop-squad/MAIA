@@ -42,6 +42,7 @@ class ConversationForm(PairwiseForm):
         }
         self.data_path = "results"
         self.text_input_hint="Please use text input when microphone is not working well."
+        self.evaluation_check_msg = "평가 항목을 모두 선택했는지 검사해주세요."
 
         super().__init__(model=model, title=title)
         
@@ -376,7 +377,7 @@ class ConversationForm(PairwiseForm):
                         question4, question5, question6,
                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
                 outputs=[ques_row1, ques_row2, ques_row3, pair_row,
-                         btn_row, situation_description,
+                         btn_row, situation_description, input_column,
                          question1, question2, question3,
                          question4, question5, question6,
                          pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
@@ -384,11 +385,6 @@ class ConversationForm(PairwiseForm):
             ).then(
                 lambda: (gr.update(interactive=True),) * 3,
                 outputs=[reset_button, continue_button, finish_button],
-                queue=True
-            ).then(
-                lambda: gr.update(visible=True),
-                inputs=None,
-                outputs=[input_column],
                 queue=False
             )
             
@@ -469,10 +465,10 @@ class ConversationForm(PairwiseForm):
             scenario_idx = 2
         
         description = self.guidance["system_usage_instruction"].format(
-            "\n".join([f"{i+1}. {situation}"
+            "\n".join([f"Step {i+1}) {situation}"
                        if i != scenario_idx
-                       else f"<span style=\"color: red; background-color: white;\">{i+1}. {situation}</span>"
-                       for i, situation in enumerate(self.situations[self.situation_idx])]))    
+                       else f"<span style=\"color: red; background-color: white;\">Step {i+1}) {situation}</span>"
+                       for i, situation in enumerate(self.situations[self.situation_idx])]))
         
         return description
 
@@ -509,7 +505,8 @@ class ConversationForm(PairwiseForm):
     def __save_benchmark(self, id_input, chatbot, situation_description, *args):
         all_questions = list(args)
         if None in all_questions:
-            return (gr.update(visible=True),) * 5 + (situation_description,) + tuple(all_questions)
+            gr.Warning(self.evaluation_check_msg)
+            return (gr.update(visible=True),) * 5 + (situation_description, gr.update(visible=False),) + tuple(all_questions)
         
         # if self.random_num == 0 1=normal, 2=augmented
         # else 1=augmented, 2=normal
@@ -543,7 +540,7 @@ class ConversationForm(PairwiseForm):
         del content["situation_index"]
         self.data["result"][f"situation{self.situation_idx + 1}"].append(content)
 
-        return (gr.update(visible=False),) * 5 + (gr.update(value=description),) + (gr.update(value=None),) * len(args)
+        return (gr.update(visible=False),) * 5 + (gr.update(value=description), gr.update(visible=True),) + (gr.update(value=None),) * len(args)
     
     def __process(self, history):
         input = history[-1][0]
@@ -627,11 +624,7 @@ class ConversationForm(PairwiseForm):
                     self.model.generate_1 = palm.prompt
                     self.model.generate_2 = Prompter(palm).prompt
             
-            situation_msg = f'''
-                            1. {self.situations[self.situation_idx][0]}
-                            2. {self.situations[self.situation_idx][1]}
-                            3. {self.situations[self.situation_idx][2]}
-                            '''
+            situation_msg = self.__get_current_scenario(self.scenario_count)
             return (situation_title, gr.update(value=situation_msg), ) + (gr.update(value=None), ) * 3 + (gr.update(visible=False),)
     
     def __submit(self, id_input, *args):
