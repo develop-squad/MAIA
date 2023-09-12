@@ -590,7 +590,7 @@ class ConversationForm(PairwiseForm):
         return (gr.update(value=None),) * 10 + (gr.update(visible=False),) * 4
     
     def __select_btn(self):
-        if self.scenario_count >= 0:
+        if self.scenario_count >= 6:
             return gr.update(visible=True), gr.update(visible=True)
         return gr.update(visible=True), gr.update(visible=False)
     
