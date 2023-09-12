@@ -547,7 +547,7 @@ class ConversationForm(PairwiseForm):
             if osp.exists(filepath):
                 with open(filepath, "r") as file:
                     scenario = [line.strip() for line in file.readlines()]
-                    self.scenario.append(scenario)
+                    scenarios.append(scenario)
                 index += 1
             else:
                 break
@@ -555,14 +555,14 @@ class ConversationForm(PairwiseForm):
         return scenarios
     
     def __load_guidance(self, name: str) -> str:
-        with open(osp.join("conversation", "guidance", name), "r", encoding="utf-8") as file:
+        with open(osp.join("conversation", "guidances", f"{name}.txt"), "r", encoding="utf-8") as file:
             return file.read()
     
     def __load_experiment_description(self, name: str, situations: list[str]) -> str:
-        with open(osp.join("conversation", "guidance", name), "r", encoding="utf-8") as file:
+        with open(osp.join("conversation", "guidances", f"{name}.txt"), "r", encoding="utf-8") as file:
             description = file.read().format(
-                "\n".join(situations[0]),
-                "\n".join(situations[1]),
-                "\n".join(situations[2]),
+                situations[0][0], situations[0][1], situations[0][2],
+                situations[1][0], situations[1][1], situations[1][2],
+                situations[2][0], situations[2][1], situations[2][2],
             )
             return description
