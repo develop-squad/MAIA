@@ -153,16 +153,14 @@ class ConversationForm(PairwiseForm):
                         label="Who do you prefer to talk to more?",
                         show_label=True,
                     )
-                with gr.Column():
+                with gr.Column(visible=True) as input_column:
                     audio_record = gr.Audio(
                         show_label=False,
                         source="microphone",
                         type="filepath",
-                        visible=False,
                     )
                     text_input = gr.Textbox(
                         show_label=False,
-                        visible=False,
                         placeholder=self.text_input_hint
                     )
                     text_input.style(container=False)
@@ -271,18 +269,17 @@ class ConversationForm(PairwiseForm):
             audio_record.stop_recording(
                 self.__add_record,
                 inputs=[chatbot, audio_record],
-                outputs=[chatbot],
+                outputs=[chatbot, audio_record],
                 queue=False,
+            ).then(
+                lambda: gr.update(visible=False),
+                outputs=[input_column],
+                queue=False
             ).then(
                 self.__process,
                 inputs=chatbot,
                 outputs=chatbot,
                 queue=True
-            ).then(
-                lambda: gr.update(interactive=True),
-                inputs=None,
-                outputs=[audio_record],
-                queue=False
             ).then(
                 lambda: (gr.update(value=None),) * 10,
                 inputs=None,
@@ -306,22 +303,14 @@ class ConversationForm(PairwiseForm):
                 outputs=[chatbot, text_input],
                 queue=False,
             ).then(
-                lambda: gr.update(interactive=False),
+                lambda: gr.update(visible=False),
                 inputs=None,
-                outputs=[audio_record],
+                outputs=[input_column],
                 queue=False
             ).then(
                 self.__process,
                 inputs=chatbot,
                 outputs=chatbot,
-                queue=True
-            ).then(
-                lambda: (
-                    gr.update(interactive=True, placeholder=self.text_input_hint),
-                    gr.update(interactive=True)
-                ),
-                inputs=None,
-                outputs=[text_input, audio_record],
                 queue=True
             ).then(
                 lambda: (gr.update(visible=True),) * 4,
@@ -335,6 +324,10 @@ class ConversationForm(PairwiseForm):
             
             # reset button
             reset_button.click(
+                lambda: (gr.update(interactive=False),) * 3,
+                outputs=[reset_button, continue_button, finish_button],
+                queue=False,
+            ).then(
                 self.__reset,
                 inputs=id_input,
                 outputs=[question1, question2, question3,
@@ -343,9 +336,18 @@ class ConversationForm(PairwiseForm):
                          ques_row1, ques_row2, ques_row3, pair_row],
                 queue=True
             ).then(
+                lambda: (gr.update(interactive=True),) * 3,
+                outputs=[reset_button, continue_button, finish_button],
+                queue=True
+            ).then(
                 lambda: (gr.update(value=None),) * 2,
                 inputs=None,
                 outputs=[chatbot, audio_record],
+                queue=True
+            ).then(
+                lambda: gr.update(visible=True),
+                inputs=None,
+                outputs=[input_column],
                 queue=True
             ).then(
                 lambda: gr.update(visible=False),
@@ -359,6 +361,10 @@ class ConversationForm(PairwiseForm):
             
             # continue button
             continue_button.click(
+                lambda: (gr.update(interactive=False),) * 3,
+                outputs=[reset_button, continue_button, finish_button],
+                queue=False
+            ).then(
                 self.__clear_audio,
                 inputs=audio_record,
                 outputs=audio_record,
@@ -374,11 +380,24 @@ class ConversationForm(PairwiseForm):
                          question1, question2, question3,
                          question4, question5, question6,
                          pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
-                queue=False,
+                queue=True,
+            ).then(
+                lambda: (gr.update(interactive=True),) * 3,
+                outputs=[reset_button, continue_button, finish_button],
+                queue=True
+            ).then(
+                lambda: gr.update(visible=True),
+                inputs=None,
+                outputs=[input_column],
+                queue=False
             )
             
             # finish button
             finish_button.click(
+                lambda: (gr.update(interactive=False),) * 3,
+                outputs=[reset_button, continue_button, finish_button],
+                queue=False
+            ).then(
                 self.__save_benchmark,
                 inputs=[id_input, chatbot, situation_description,
                         question1, question2, question3,
@@ -391,10 +410,19 @@ class ConversationForm(PairwiseForm):
                          pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
                 queue=False,
             ).then(
+                lambda: gr.update(visible=True),
+                inputs=None,
+                outputs=[input_column],
+                queue=True
+            ).then(
                 self.__finish_conversation,
                 inputs=situation_title,
                 outputs=[situation_title, situation_description, chatbot, audio_record, text_input, finish_button],
                 queue=True,
+            ).then(
+                lambda: (gr.update(interactive=True),) * 3,
+                outputs=[reset_button, continue_button, finish_button],
+                queue=True
             ).then(
                 lambda: gr.update(visible=True if self.situation_idx >= 2 else False),
                 inputs=None,
@@ -455,13 +483,13 @@ class ConversationForm(PairwiseForm):
     
     def __add_text(self, history, text_input):
         history = history + [(text_input, None)]
-        return history, gr.update(value="", placeholder="", interactive=False)
+        return history, gr.update(value="", placeholder="")
     
     def __add_record(self, history, audio_record):
         if not audio_record:
             return history
         history = history + [((audio_record,), None)]
-        return history
+        return history, gr.update(value=None)
 
     def __add_audio(self, history, audio_file):
         history = history + [((audio_file.name,), None)]
