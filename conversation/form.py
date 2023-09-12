@@ -92,79 +92,77 @@ class ConversationForm(PairwiseForm):
                     visible=False
                 )
 
-                with gr.Column():
-                    with gr.Row():
-                        question1 = gr.Radio(
-                            scale=0.5,
-                            choices=self.scales["likert"],
-                            label="[Model 1] Is the response make sence?",
-                            show_label=True,
-                            visible=False,
-                        )
-                        question4 = gr.Radio(
-                            scale=0.5,
-                            choices=self.scales["likert"],
-                            label="[Model 2] Is the response make sense?",
-                            show_label=True,
-                            visible=False,
-                        )
-                    with gr.Row():
-                        question2 = gr.Radio(
-                            scale=0.5,
-                            choices=self.scales["likert"],
-                            label="[Model 1] Is the context of the response consistent?",
-                            show_label=True,
-                            visible=False,
-                        )
-                        question5 = gr.Radio(
-                            scale=0.5,
-                            choices=self.scales["likert"],
-                            label="[Model 2] Is the context of the response consistent?",
-                            show_label=True,
-                            visible=False,
-                        )
-                    with gr.Row():
-                        question3 = gr.Radio(
-                            scale=0.5,
-                            choices=self.scales["likert"],
-                            label="[Model 1] Are you interested in the response? Would you like to continue the conversation?",
-                            show_label=True,
-                            visible=False,
-                        )
-                        question6 = gr.Radio(
-                            scale=0.5,
-                            choices=self.scales["likert"],
-                            label="[Model 2] Are you interested in the response? Would you like to continue the conversation?",
-                            show_label=True,
-                            visible=False,
-                        )
-                with gr.Column():
-                    with gr.Row():
-                        pairwise_question1 = gr.Radio(
-                            choices=self.scales["comparison"],
-                            label="Which response makes more sense?",
-                            show_label=True,
-                            visible=False,
-                        )
-                        pairwise_question2 = gr.Radio(
-                            choices=self.scales["comparison"],
-                            label="Which response is more consistent?",
-                            show_label=True,
-                            visible=False,
-                        )
-                    with gr.Row():
-                        pairwise_question3 = gr.Radio(
-                            choices=self.scales["comparison"],
-                            label="Which response is more interesting?",
-                            show_label=True,
-                            visible=False,
-                        )
-                        pairwise_question4 = gr.Radio(
-                            choices=self.scales["comparison"],
-                            label="Who do you prefer to talk to more?",
-                            show_label=True,
-                            visible=False,
-                        )
+                with gr.Row():
+                    question1 = gr.Radio(
+                        scale=0.5,
+                        choices=self.scales["likert"],
+                        label="[Model 1] Is the response make sence?",
+                        show_label=True,
+                        visible=False,
+                    )
+                    question4 = gr.Radio(
+                        scale=0.5,
+                        choices=self.scales["likert"],
+                        label="[Model 2] Is the response make sense?",
+                        show_label=True,
+                        visible=False,
+                    )
+                with gr.Row():
+                    question2 = gr.Radio(
+                        scale=0.5,
+                        choices=self.scales["likert"],
+                        label="[Model 1] Is the context of the response consistent?",
+                        show_label=True,
+                        visible=False,
+                    )
+                    question5 = gr.Radio(
+                        scale=0.5,
+                        choices=self.scales["likert"],
+                        label="[Model 2] Is the context of the response consistent?",
+                        show_label=True,
+                        visible=False,
+                    )
+                with gr.Row():
+                    question3 = gr.Radio(
+                        scale=0.5,
+                        choices=self.scales["likert"],
+                        label="[Model 1] Are you interested in the response? Would you like to continue the conversation?",
+                        show_label=True,
+                        visible=False,
+                    )
+                    question6 = gr.Radio(
+                        scale=0.5,
+                        choices=self.scales["likert"],
+                        label="[Model 2] Are you interested in the response? Would you like to continue the conversation?",
+                        show_label=True,
+                        visible=False,
+                    )
+                with gr.Row():
+                    pairwise_question1 = gr.Radio(
+                        choices=self.scales["comparison"],
+                        label="Which response makes more sense?",
+                        show_label=True,
+                        visible=False,
+                    )
+                    pairwise_question2 = gr.Radio(
+                        choices=self.scales["comparison"],
+                        label="Which response is more consistent?",
+                        show_label=True,
+                        visible=False,
+                    )
+                with gr.Row():
+                    pairwise_question3 = gr.Radio(
+                        choices=self.scales["comparison"],
+                        label="Which response is more interesting?",
+                        show_label=True,
+                        visible=False,
+                    )
+                    pairwise_question4 = gr.Radio(
+                        choices=self.scales["comparison"],
+                        label="Who do you prefer to talk to more?",
+                        show_label=True,
+                        visible=False,
+                    )
                 with gr.Column():
                     audio_record = gr.Audio(
                         show_label=False,
@@ -172,6 +170,12 @@ class ConversationForm(PairwiseForm):
                         type="filepath",
                         visible=False,
                     )
+                    text_input = gr.Textbox(
+                        show_label=False,
+                        visible=False,
+                        placeholder="Please use Text input when microphone is not working well."
+                    )
+                    text_input.style(container=False)
                 with gr.Row():
                     reset_button = gr.Button(
                         "Reset this conversation",
@@ -181,16 +185,6 @@ class ConversationForm(PairwiseForm):
                         "Continue",
                         visible=False,
                     )
-                with gr.Column():
-                    text_input = gr.Textbox(
-                        show_label=False,
-                        visible=False
-                    )
-                    text_input_message = gr.Markdown(
-                        "Please use Text input when microphone is not working well.",
-                        visible=False
-                    )
-                    text_input.style(container=False)
                 with gr.Column():
                     finish_message = gr.Markdown(
                         "### Thank you! :)",
@@ -328,9 +322,9 @@ class ConversationForm(PairwiseForm):
             save_id_button.click(
                 self.__save_id,
                 inputs=[id_input, save_id_button,
-                        situation_title, situation_description, chatbot, audio_record, text_input, text_input_message],
+                        situation_title, situation_description, chatbot, audio_record, text_input],
                 outputs=[id_input, save_id_button,
-                         situation_title, situation_description, chatbot, audio_record, text_input, text_input_message],
+                         situation_title, situation_description, chatbot, audio_record, text_input],
                 queue=False,
             )
 
@@ -355,8 +349,8 @@ class ConversationForm(PairwiseForm):
                          pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
                 queue=True,
             ).then(
-                lambda: (gr.update(visible=True), ) *2,
-                outputs=[reset_button, finish_button],
+                lambda: (gr.update(visible=True), ) * 3,
+                outputs=[reset_button, text_input_button, finish_button],
                 queue=False
             )
             
@@ -397,7 +391,7 @@ class ConversationForm(PairwiseForm):
             finish_button.click(
                 self.__finish_conversation,
                 inputs=situation_title,
-                outputs=[situation_title, situation_description, chatbot, audio_record, text_input, finish_button, text_input_message],
+                outputs=[situation_title, situation_description, chatbot, audio_record, text_input, finish_button],
                 queue=True,
             ).then(
                 self.__activate_assistant,
@@ -511,14 +505,16 @@ class ConversationForm(PairwiseForm):
         transcript, message, message2 = response
         print(f"- User: {transcript}")
 
+        message = message.strip()
+        message2 = message2.strip()
         self.random_num = random.randrange(2)
         #speech_data = f"data:audio/wav;base64,{speech if self.random_num == 0 else speech2}"
         #output = f"[Model 1]<br/><audio controls autoplay src=\"{speech_data}\" type=\"audio/wav\"></audio>"
-        output = "[Model 1]<br/>"
+        output = "[Model 1]\n"
         output += message if self.random_num == 0 else message2
         
         #speech_data = f"data:audio/wav;base64,{speech2 if self.random_num == 0 else speech}"
-        output += f"<br/><br/>[Model 2]<br/>" #<br/><audio controls src=\"{speech_data}\" type=\"audio/wav\"></audio>"
+        output += f"\n\n[Model 2]\n" #<br/><audio controls src=\"{speech_data}\" type=\"audio/wav\"></audio>"
         output += message2 if self.random_num == 0 else message
         
         print(f"- Assistant 1: {message if self.random_num == 0 else message2}")
@@ -559,7 +555,7 @@ class ConversationForm(PairwiseForm):
         self.situation_idx += 1
         if self.situation_idx > 2:
             return (gr.update(visible=False), ) * 2 \
-                + (gr.update(value=None, visible=False), ) + (gr.update(visible=False),) * 4
+                + (gr.update(value=None, visible=False), ) + (gr.update(visible=False),) * 3
         else:            
             from conversation.prompter import Prompter
             from models.chatgpt.core import ChatGPT
@@ -580,7 +576,7 @@ class ConversationForm(PairwiseForm):
                             2. {self.situations[self.situation_idx][1]}
                             3. {self.situations[self.situation_idx][2]}
                             '''
-            return (situation_title, gr.update(value=situation_msg), ) + (gr.update(value=None), ) * 3 + (gr.update(visible=False), gr.update(visible=True))
+            return (situation_title, gr.update(value=situation_msg), ) + (gr.update(value=None), ) * 3 + (gr.update(visible=False),)
     
     def __submit(self, id_input, *args):
         # 에외처리 필요
