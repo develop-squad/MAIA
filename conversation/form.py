@@ -432,7 +432,7 @@ class ConversationForm(PairwiseForm):
         description = self.guidance["system_usage_instruction"].format(
             "\n".join([f"{i+1}. {situation}"
                        if i != scenario_idx
-                       else f"<span style=\"color:red\">{i+1}. {situation}</span>"
+                       else f"<span style=\"color: red; background-color: white;\">{i+1}. {situation}</span>"
                        for i, situation in enumerate(self.situations[self.situation_idx])]))    
         
         return description
