@@ -40,6 +40,7 @@ class ConversationForm(PairwiseForm):
             }
         }
         self.data_path = "results"
+        self.text_input_hint="Please use text input when microphone is not working well."
 
         super().__init__(model=model, title=title)
         
@@ -92,76 +93,66 @@ class ConversationForm(PairwiseForm):
                     visible=False
                 )
 
-                with gr.Row():
+                with gr.Row(visible=False) as ques_row1:
                     question1 = gr.Radio(
                         scale=0.5,
                         choices=self.scales["likert"],
                         label="[Model 1] Is the response make sence?",
                         show_label=True,
-                        visible=False,
                     )
                     question4 = gr.Radio(
                         scale=0.5,
                         choices=self.scales["likert"],
                         label="[Model 2] Is the response make sense?",
                         show_label=True,
-                        visible=False,
                     )
-                with gr.Row():
+                with gr.Row(visible=False) as ques_row2:
                     question2 = gr.Radio(
                         scale=0.5,
                         choices=self.scales["likert"],
                         label="[Model 1] Is the context of the response consistent?",
                         show_label=True,
-                        visible=False,
                     )
                     question5 = gr.Radio(
                         scale=0.5,
                         choices=self.scales["likert"],
                         label="[Model 2] Is the context of the response consistent?",
                         show_label=True,
-                        visible=False,
                     )
-                with gr.Row():
+                with gr.Row(visible=False) as ques_row3:
                     question3 = gr.Radio(
                         scale=0.5,
                         choices=self.scales["likert"],
                         label="[Model 1] Are you interested in the response? Would you like to continue the conversation?",
                         show_label=True,
-                        visible=False,
                     )
                     question6 = gr.Radio(
                         scale=0.5,
                         choices=self.scales["likert"],
                         label="[Model 2] Are you interested in the response? Would you like to continue the conversation?",
                         show_label=True,
-                        visible=False,
                     )
-                with gr.Row():
+                with gr.Row(visible=False) as pair_row1:
                     pairwise_question1 = gr.Radio(
                         choices=self.scales["comparison"],
                         label="Which response makes more sense?",
                         show_label=True,
-                        visible=False,
                     )
                     pairwise_question2 = gr.Radio(
                         choices=self.scales["comparison"],
                         label="Which response is more consistent?",
                         show_label=True,
-                        visible=False,
                     )
-                with gr.Row():
+                with gr.Row(visible=False) as pair_row2:
                     pairwise_question3 = gr.Radio(
                         choices=self.scales["comparison"],
                         label="Which response is more interesting?",
                         show_label=True,
-                        visible=False,
                     )
                     pairwise_question4 = gr.Radio(
                         choices=self.scales["comparison"],
                         label="Who do you prefer to talk to more?",
                         show_label=True,
-                        visible=False,
                     )
                 with gr.Column():
                     audio_record = gr.Audio(
@@ -173,7 +164,7 @@ class ConversationForm(PairwiseForm):
                     text_input = gr.Textbox(
                         show_label=False,
                         visible=False,
-                        placeholder="Please use Text input when microphone is not working well."
+                        placeholder=self.text_input_hint
                     )
                     text_input.style(container=False)
                 with gr.Row():
@@ -181,8 +172,8 @@ class ConversationForm(PairwiseForm):
                         "Reset this conversation",
                         visible=False
                     )
-                    text_input_button = gr.Button(
-                        "Continue",
+                    continue_button = gr.Button(
+                        "Continue this conversation",
                         visible=False,
                     )
                 with gr.Column():
@@ -265,6 +256,7 @@ class ConversationForm(PairwiseForm):
                     )
                     usability_button = gr.Button("Submit")
             
+            # IRB Agreement save button
             irb_button.click(
                 self.__save_irb_agreement,
                 inputs=[informed_consent, irb_button, irb_msg],
@@ -272,53 +264,7 @@ class ConversationForm(PairwiseForm):
                 queue=False,
             )
             
-            text_input.submit(
-                self.__add_text,
-                inputs=[chatbot, text_input],
-                outputs=[chatbot, text_input],
-                queue=False,
-            ).then(
-                lambda: gr.update(interactive=False),
-                inputs=None,
-                outputs=[audio_record],
-                queue=False
-            ).then(
-                self.__process,
-                inputs=chatbot,
-                outputs=chatbot,
-                queue=True
-            ).then(
-                lambda: (gr.update(interactive=True), ) * 2,
-                inputs=None,
-                outputs=[text_input, audio_record],
-                queue=False
-            ).then(
-                self.__activate_benchmark,
-                outputs=[question1, question2, question3, question4, question5, question6,
-                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
-                queue=True,
-            ).then(
-                lambda: (gr.update(visible=True), ) * 3,
-                outputs=[text_input_button, reset_button, finish_button],
-                queue=False
-            )
-            
-            text_input_button.click(
-                self.__save_benchmark,
-                inputs=[id_input, chatbot,
-                        question1, question2, question3,
-                        question4, question5, question6,
-                        pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
-                outputs=[question1, question2, question3,
-                         question4, question5, question6,
-                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
-                queue=True,
-            ).then(
-                lambda: (gr.update(visible=False), ) * 2,
-                outputs=[reset_button, text_input_button],
-                queue=False,
-            )
-
+            # id save button
             save_id_button.click(
                 self.__save_id,
                 inputs=[id_input, save_id_button,
@@ -327,7 +273,8 @@ class ConversationForm(PairwiseForm):
                          situation_title, situation_description, chatbot, audio_record, text_input],
                 queue=False,
             )
-
+            
+            # audio recording component
             audio_record.stop_recording(
                 self.__add_record,
                 inputs=[chatbot, audio_record],
@@ -344,32 +291,56 @@ class ConversationForm(PairwiseForm):
                 outputs=[audio_record],
                 queue=False
             ).then(
-                self.__activate_benchmark,
+                lambda: (gr.update(value=None),) * 10,
+                inputs=None,
                 outputs=[question1, question2, question3, question4, question5, question6,
                          pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
                 queue=True,
             ).then(
-                lambda: (gr.update(visible=True), ) * 3,
-                outputs=[reset_button, text_input_button, finish_button],
+                lambda: (gr.update(visible=True),) * 5,
+                outputs=[ques_row1, ques_row2, ques_row3, pair_row1, pair_row2],
+                queue=True,
+            ).then(
+                lambda: (gr.update(visible=True),) * 3,
+                outputs=[reset_button, continue_button, finish_button],
                 queue=False
             )
             
-            audio_record.change(
-                self.__save_benchmark,
-                inputs=[id_input, chatbot,
-                        question1, question2, question3,
-                        question4, question5, question6,
-                        pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
-                outputs=[question1, question2, question3,
-                         question4, question5, question6,
-                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
+            # text input component
+            text_input.submit(
+                self.__add_text,
+                inputs=[chatbot, text_input],
+                outputs=[chatbot, text_input],
+                queue=False,
+            ).then(
+                lambda: gr.update(interactive=False),
+                inputs=None,
+                outputs=[audio_record],
+                queue=False
+            ).then(
+                self.__process,
+                inputs=chatbot,
+                outputs=chatbot,
+                queue=True
+            ).then(
+                lambda: (
+                    gr.update(interactive=True, placeholder=self.text_input_hint),
+                    gr.update(interactive=True)
+                ),
+                inputs=None,
+                outputs=[text_input, audio_record],
+                queue=True
+            ).then(
+                lambda: (gr.update(visible=True),) * 5,
+                outputs=[ques_row1, ques_row2, ques_row3, pair_row1, pair_row2],
                 queue=True,
             ).then(
-                lambda: gr.update(visible=False),
-                outputs=[reset_button],
-                queue=False,
+                lambda: (gr.update(visible=True), ) * 3,
+                outputs=[continue_button, reset_button, finish_button],
+                queue=False
             )
             
+            # reset button
             reset_button.click(
                 self.__reset,
                 inputs=id_input,
@@ -384,10 +355,32 @@ class ConversationForm(PairwiseForm):
                 queue=True
             ).then(
                 lambda: (gr.update(visible=False),) * 3,
-                outputs=[reset_button, finish_button, text_input_button],
+                outputs=[reset_button, finish_button, continue_button],
                 queue=False
             )
             
+            # continue button
+            continue_button.click(
+                self.__clear_audio,
+                inputs=audio_record,
+                outputs=audio_record,
+                queue=True,
+            ).then(
+                self.__save_benchmark,
+                inputs=[id_input, chatbot,
+                        reset_button, continue_button,
+                        question1, question2, question3,
+                        question4, question5, question6,
+                        pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
+                outputs=[ques_row1, ques_row2, ques_row3, pair_row1, pair_row2,
+                         reset_button, continue_button,
+                         question1, question2, question3,
+                         question4, question5, question6,
+                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
+                queue=False,
+            )
+            
+            # finish button
             finish_button.click(
                 self.__finish_conversation,
                 inputs=situation_title,
@@ -400,6 +393,7 @@ class ConversationForm(PairwiseForm):
                 queue=False
             )
             
+            # last question submit button
             submit_button.click(
                 self.__submit,
                 inputs=[id_input, last_question],
@@ -408,6 +402,7 @@ class ConversationForm(PairwiseForm):
                 queue=True,
             )
             
+            # usability evaluation submit button
             usability_button.click(
                 self.__submit,
                 inputs=[id_input,
@@ -434,7 +429,7 @@ class ConversationForm(PairwiseForm):
     
     def __add_text(self, history, text_input):
         history = history + [(text_input, None)]
-        return history, gr.update(value="", interactive=False)
+        return history, gr.update(value="", placeholder="", interactive=False)
     
     def __add_record(self, history, audio_record):
         if not audio_record:
@@ -452,13 +447,17 @@ class ConversationForm(PairwiseForm):
         self.data["mturk_worker_id"] = id_input
         return (gr.update(interactive=False), ) * 2 + (gr.update(visible=True), ) * len(args)
     
-    def __activate_benchmark(self):
-        return (gr.update(value=None, visible=True), ) * 10
+    def __clear_audio(self, audio):
+        if not audio:
+            return audio
+        return gr.update(value=None)
     
-    def __save_benchmark(self, id_input, chatbot, *args):
+    def __save_benchmark(self, id_input, chatbot, reset_button, continue_button, *args):
         all_questions = list(args)
         if None in all_questions:
-            return tuple(all_questions)
+            return (gr.update(visible=True),) * 5 \
+                    + (reset_button, continue_button,) \
+                    + tuple(all_questions)
         
         # if self.random_num == 0 1=normal, 2=augmented
         # else 1=augmented, 2=normal
@@ -469,8 +468,9 @@ class ConversationForm(PairwiseForm):
             for i in range(-1, -5, -1):
                 all_questions[i] = "augmented" if all_questions[i] == 1 else "normal"
 
-        message1 = chatbot[-1][1].split('</audio>')[1].split('<br/>')[0]
-        message2 = chatbot[-1][1].split('</audio>')[-1]
+        message1, message2 = chatbot[-1][1].split('[Model 2]')
+        message1 = message1.replace("[Model 1]","").strip()
+        message2 = message2.strip()
         
         bot_message = dict()
         bot_message['normal_model'] = message1 if self.random_num == 0 else message2
@@ -488,7 +488,7 @@ class ConversationForm(PairwiseForm):
         del content["situation_index"]
         self.data["result"][f"situation{self.situation_idx + 1}"].append(content)
 
-        return (gr.update(value=None, visible=False), ) * (2 + len(args))
+        return (gr.update(visible=False),) * 7 + (gr.update(value=None),) * len(args)
     
     def __process(self, history):
         input = history[-1][0]
