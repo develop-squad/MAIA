@@ -1,9 +1,10 @@
 import gradio as gr
 import logging
 import random
+import json
 import os
 import os.path as osp
-from utils.form import PairwiseForm 
+from utils.form import PairwiseForm
 
 class ConversationForm(PairwiseForm):
     def __init__(self, model, title):
@@ -27,6 +28,17 @@ class ConversationForm(PairwiseForm):
             "system_guide": self.__load_guidance("system_guide"),
         }
         self.situation_idx = 0
+        self.data = {
+            "mturk_worker_id": "N/A",
+            "result": {
+                "situation1": list(),
+                "situation2": list(),
+                "situation3": list(),
+                "last_answer": -1,          # -1 means None(=null)
+                "usability_answer": list()
+            }
+        }
+        self.data_path = "results"
 
         super().__init__(model=model, title=title)
         
@@ -172,7 +184,7 @@ class ConversationForm(PairwiseForm):
                                                      visible=False)
                     text_input.style(container=False)
                     text_input_button = gr.Button(
-                        "Save evalution results",
+                        "Save evaluation results",
                         visible=False,
                     )
                 with gr.Column():
@@ -434,6 +446,7 @@ class ConversationForm(PairwiseForm):
     def __save_id(self, id_input, save_id_button, *args):
         if not id_input:
             return (id_input, save_id_button, ) + tuple(args)
+        self.data["mturk_worker_id"] = id_input
         return (gr.update(interactive=False), ) * 2 + (gr.update(visible=True), ) * len(args)
     
     def __activate_benchmark(self):
@@ -468,6 +481,10 @@ class ConversationForm(PairwiseForm):
         content["situation_index"] = self.situation_idx
         self.logger.info(f"Benchmark: {str(content)}")
         
+        del content["mturk_worker_id"]
+        del content["situation_index"]
+        self.data["result"][f"situation{self.situation_idx + 1}"].append(content)
+
         return (gr.update(value=None, visible=False), ) * (2 + len(args))
     
     def __process(self, history):
@@ -506,7 +523,8 @@ class ConversationForm(PairwiseForm):
         content["situation_index"] = self.situation_idx
         content['message'] = "The conversation history has been reset."
         self.logger.info(f"Benchmark: {str(content)}")
-        
+        self.data["result"][f"situation{self.situation_idx + 1}"].clear()
+
         from conversation.prompter import Prompter
         from models.chatgpt.core import ChatGPT
             
@@ -538,11 +556,13 @@ class ConversationForm(PairwiseForm):
             
             chatgpt = ChatGPT()
             if type(self.model.generate_1) is type(chatgpt.prompt):
+                self.model.generate_1 = chatgpt.prompt
                 self.model.generate_2 = Prompter(chatgpt).prompt
             else:
                 from models.palm.core import PaLM
                 palm = PaLM()
                 if type(self.model.generate_1) is type(palm.prompt):
+                    self.model.generate_1 = palm.prompt
                     self.model.generate_2 = Prompter(palm).prompt
             
             situation_msg = f'''
@@ -558,9 +578,15 @@ class ConversationForm(PairwiseForm):
         content["mturk_worker_id"] = id_input
         if len(args) == 1:
             content["last_answer"] = args[0]
+            self.data["result"]["last_answer"] = args[0]
         else:
             content["usability_answer"] = list(args)
+            self.data["result"]["usability_answer"] = list(args)
         self.logger.info(f"Benchmark: {str(content)}")
+        
+        os.makedirs(f"{self.data_path}", exist_ok=True)
+        with open(f"{self.data_path}/user_{id_input}_data.json", "w", encoding="utf-8") as file:
+            json.dump(self.data, file)
         
         if len(args) == 1:
             return (gr.update(visible=False), ) * 3 + (gr.update(visible=True), ) * 2
