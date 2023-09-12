@@ -227,7 +227,7 @@ class Prompter(Model):
             if content.startswith("- "):
                 return [item.strip().replace("- ", "").replace("* ", "") for item in content.split("\n") if item.strip()]
             else:
-                return content
+                return [content]
         else:
             return []
 
