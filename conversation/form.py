@@ -600,8 +600,10 @@ class ConversationForm(PairwiseForm):
         all_questions = list(args)
         if None in all_questions:
             gr.Warning(self.evaluation_check_msg)
-            return (gr.update(visible=True),) * 10 \
-                    + (gr.update(visible=False),) * 3 \
+            return (gr.update(visible=True),) * 9 \
+                    + (gr.update(visible=False),) \
+                    + (gr.update(visible=True),) * 2 \
+                    + (gr.update(visible=False),) * 1 \
                     + args
         
         # if self.random_num == 0 1=normal, 2=augmented
@@ -658,7 +660,7 @@ class ConversationForm(PairwiseForm):
             return (gr.update(value=situation_msg), situation_title, gr.update(value=None),) \
                     + (gr.update(visible=False),) * 6 \
                     + (gr.update(visible=True),) \
-                    + (gr.update(value=None),) * 2 \
+                    + (gr.update(value=None, visible=True),) * 2 \
                     + (gr.update(visible=False),) \
                     + (gr.update(value=False),) * 10
     
