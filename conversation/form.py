@@ -575,8 +575,8 @@ class ConversationForm(PairwiseForm):
     
     def __select_btn(self):
         if self.scenario_count >= 6:
-            return gr.update(visible=False), gr.update(visible=True)
-        return gr.update(visible=True), gr.update(visible=True)
+            return gr.update(visible=True), gr.update(visible=True)
+        return gr.update(visible=True), gr.update(visible=False)
     
     def __finish_conversation(self, situation_title):
         self.scenario_count = 0
