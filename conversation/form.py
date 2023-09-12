@@ -50,7 +50,7 @@ class ConversationForm(PairwiseForm):
         self.logger.setLevel(logging.INFO)
         self.formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 
-        self.file_handler = logging.FileHandler("benchmark.log")
+        self.file_handler = logging.FileHandler("hit.log")
         self.file_handler.setFormatter(self.formatter)
         self.logger.addHandler(self.file_handler)
 
@@ -371,7 +371,7 @@ class ConversationForm(PairwiseForm):
                 outputs=audio_record,
                 queue=True,
             ).then(
-                self.__save_benchmark,
+                self.__save_survey,
                 inputs=[id_input, chatbot, finish_button, situation_description,
                         question1, question2, question3,
                         question4, question5, question6,
@@ -462,7 +462,7 @@ class ConversationForm(PairwiseForm):
     def __save_irb_agreement(self, irb_agreement, irb_button, irb_msg):
         if not irb_agreement:
             return irb_agreement, irb_button, irb_msg
-        return (gr.update(visible=False), ) * 2 + (gr.update(value="### Please go to the System Guide tab."), )
+        return (gr.update(visible=False), ) * 2 + (gr.update(value="### Navigate to the 'System Guide' tab."), )
     
     def __add_text(self, history, text_input):
         history = history + [(text_input, None)]
@@ -489,27 +489,27 @@ class ConversationForm(PairwiseForm):
             return audio
         return gr.update(value=None)
     
-    def __save_benchmark(self, id_input, chatbot, finish_button, situation_description, *args):
+    def __save_survey(self, id_input, chatbot, finish_button, situation_description, *args):
         all_questions = list(args)
         if None in all_questions:
             gr.Warning(self.evaluation_check_msg)
             return (gr.update(visible=True),) * 5 + (finish_button, situation_description, gr.update(visible=False),) + tuple(all_questions)
         
-        # if self.random_num == 0 1=normal, 2=augmented
-        # else 1=augmented, 2=normal
+        # if self.random_num == 0 1=base, 2=augmented
+        # else 1=augmented, 2=base
         if self.random_num == 0:
             for i in range(-1, -5, -1):
-                all_questions[i] = "normal" if all_questions[i] == 1 else "augmented"
+                all_questions[i] = "base" if all_questions[i] == 1 else "augmented"
         else:
             for i in range(-1, -5, -1):
-                all_questions[i] = "augmented" if all_questions[i] == 1 else "normal"
+                all_questions[i] = "augmented" if all_questions[i] == 1 else "base"
 
         message1, message2 = chatbot[-1][1].split('[Model 2]')
         message1 = message1.replace("[Model 1]","").strip()
         message2 = message2.strip()
         
         bot_message = dict()
-        bot_message['normal_model'] = message1 if self.random_num == 0 else message2
+        bot_message['base_model'] = message1 if self.random_num == 0 else message2
         bot_message['augmented_model'] = message2 if self.random_num == 0 else message1
         
         self.scenario_count += 1
@@ -521,7 +521,7 @@ class ConversationForm(PairwiseForm):
         content["bot_message"] = bot_message
         content["answer"] = all_questions
         content["situation_index"] = self.situation_idx
-        self.logger.info(f"Benchmark: {str(content)}")
+        self.logger.info(f"HIT: {str(content)}")
         
         del content["mturk_worker_id"]
         del content["situation_index"]
@@ -568,7 +568,7 @@ class ConversationForm(PairwiseForm):
         content["situation_index"] = self.situation_idx
         content['message'] = "The conversation history has been reset."
         self.scenario_count = 0
-        self.logger.info(f"Benchmark: {str(content)}")
+        self.logger.info(f"HIT: {str(content)}")
         self.data["result"][f"situation{self.situation_idx + 1}"].clear()
 
         from conversation.prompter import Prompter
@@ -602,21 +602,21 @@ class ConversationForm(PairwiseForm):
                     + (gr.update(visible=False),) * 1 \
                     + args
         
-        # if self.random_num == 0 1=normal, 2=augmented
-        # else 1=augmented, 2=normal
+        # if self.random_num == 0 1=base, 2=augmented
+        # else 1=augmented, 2=base
         if self.random_num == 0:
             for i in range(-1, -5, -1):
-                all_questions[i] = "normal" if all_questions[i] == 1 else "augmented"
+                all_questions[i] = "base" if all_questions[i] == 1 else "augmented"
         else:
             for i in range(-1, -5, -1):
-                all_questions[i] = "augmented" if all_questions[i] == 1 else "normal"
+                all_questions[i] = "augmented" if all_questions[i] == 1 else "base"
 
         message1, message2 = chatbot[-1][1].split('[Model 2]')
         message1 = message1.replace("[Model 1]","").strip()
         message2 = message2.strip()
         
         bot_message = dict()
-        bot_message['normal_model'] = message1 if self.random_num == 0 else message2
+        bot_message['base_model'] = message1 if self.random_num == 0 else message2
         bot_message['augmented_model'] = message2 if self.random_num == 0 else message1
         
         content = dict()
@@ -625,7 +625,7 @@ class ConversationForm(PairwiseForm):
         content["bot_message"] = bot_message
         content["answer"] = all_questions
         content["situation_index"] = self.situation_idx
-        self.logger.info(f"Benchmark: {str(content)}")
+        self.logger.info(f"HIT: {str(content)}")
         
         del content["mturk_worker_id"]
         del content["situation_index"]
@@ -670,7 +670,7 @@ class ConversationForm(PairwiseForm):
         else:
             content["usability_answer"] = list(args)
             self.data["result"]["usability_answer"] = list(args)
-        self.logger.info(f"Benchmark: {str(content)}")
+        self.logger.info(f"HIT: {str(content)}")
         
         os.makedirs(f"{self.data_path}", exist_ok=True)
         with open(f"{self.data_path}/user_{id_input}_data.json", "w", encoding="utf-8") as file:
