@@ -153,7 +153,7 @@ class ConversationForm(PairwiseForm):
                         label="Who do you prefer to talk to more?",
                         show_label=True,
                     )
-                with gr.Column(visible=True) as input_column:
+                with gr.Column(visible=False) as input_column:
                     audio_record = gr.Audio(
                         show_label=False,
                         source="microphone",
@@ -259,9 +259,9 @@ class ConversationForm(PairwiseForm):
             save_id_button.click(
                 self.__save_id,
                 inputs=[id_input, save_id_button,
-                        situation_title, situation_description, chatbot, audio_record, text_input],
+                        situation_title, situation_description, chatbot],
                 outputs=[id_input, save_id_button,
-                         situation_title, situation_description, chatbot, audio_record, text_input],
+                         situation_title, situation_description, chatbot, input_column],
                 queue=False,
             )
             
@@ -497,9 +497,9 @@ class ConversationForm(PairwiseForm):
     
     def __save_id(self, id_input, save_id_button, *args):
         if not id_input:
-            return (id_input, save_id_button, ) + tuple(args)
+            return (id_input, save_id_button, ) + tuple(args) + (gr.update(visible=False), )
         self.data["mturk_worker_id"] = id_input
-        return (gr.update(interactive=False), ) * 2 + (gr.update(visible=True), ) * len(args)
+        return (gr.update(interactive=False), ) * 2 + (gr.update(visible=True), ) * (len(args) + 1)
     
     def __clear_audio(self, audio):
         if not audio:
