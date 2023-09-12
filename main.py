@@ -1,4 +1,3 @@
-import os
 import fire
 from dotenv import load_dotenv
 from utils.launch import Launcher, LaunchConfig
@@ -80,7 +79,6 @@ def main(**kwargs):
     )
 
     chatgpt = ChatGPT(
-        api_key=os.environ.get("OPENAI_API_KEY"),
         context=False,
     )
     chatgpt_augmented = Prompter(chatgpt)
