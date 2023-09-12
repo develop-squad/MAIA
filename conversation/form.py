@@ -351,8 +351,8 @@ class ConversationForm(PairwiseForm):
                 outputs=[input_column],
                 queue=True
             ).then(
-                lambda: gr.update(visible=False),
-                outputs=[btn_row],
+                lambda: (gr.update(visible=False),) * 2,
+                outputs=[btn_row, finish_button],
                 queue=False
             ).then(
                 lambda: gr.update(value=self.__get_current_scenario(self.scenario_count)),
