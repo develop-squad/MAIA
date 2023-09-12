@@ -393,7 +393,7 @@ class ConversationForm(PairwiseForm):
             finish_button.click(
                 self.__finish_conversation,
                 inputs=situation_title,
-                outputs=[situation_title, situation_description, chatbot, audio_record, text_input, finish_button],
+                outputs=[situation_title, situation_description, chatbot, audio_record, text_input, finish_button, text_input_message],
                 queue=True,
             ).then(
                 self.__activate_assistant,
@@ -554,7 +554,7 @@ class ConversationForm(PairwiseForm):
         self.situation_idx += 1
         if self.situation_idx > 2:
             return (gr.update(visible=False), ) * 2 \
-                + (gr.update(value=None, visible=False), ) + (gr.update(visible=False),) * 3
+                + (gr.update(value=None, visible=False), ) + (gr.update(visible=False),) * 4
         else:            
             from conversation.prompter import Prompter
             from models.chatgpt.core import ChatGPT
@@ -575,7 +575,7 @@ class ConversationForm(PairwiseForm):
                             2. {self.situations[self.situation_idx][1]}
                             3. {self.situations[self.situation_idx][2]}
                             '''
-            return (situation_title, gr.update(value=situation_msg), ) + (gr.update(value=None), ) * 3 + (gr.update(visible=False), )
+            return (situation_title, gr.update(value=situation_msg), ) + (gr.update(value=None), ) * 3 + (gr.update(visible=False), gr.update(visible=True))
     
     def __submit(self, id_input, *args):
         # 에외처리 필요
