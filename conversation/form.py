@@ -172,10 +172,14 @@ class ConversationForm(PairwiseForm):
                         type="filepath",
                         visible=False,
                     )
-                with gr.Column():
+                with gr.Row():
                     reset_button = gr.Button(
                         "Reset this conversation",
                         visible=False
+                    )
+                    text_input_button = gr.Button(
+                        "Continue",
+                        visible=False,
                     )
                 with gr.Column():
                     text_input = gr.Textbox(
@@ -187,10 +191,6 @@ class ConversationForm(PairwiseForm):
                         visible=False
                     )
                     text_input.style(container=False)
-                    text_input_button = gr.Button(
-                        "Save evaluation results",
-                        visible=False,
-                    )
                 with gr.Column():
                     finish_message = gr.Markdown(
                         "### Thank you! :)",
