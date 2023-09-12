@@ -383,6 +383,10 @@ class ConversationForm(PairwiseForm):
                          pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
                 queue=True,
             ).then(
+                lambda: gr.update(visible=False),
+                outputs=finish_button,
+                queue=True,
+            ).then(
                 lambda: (gr.update(interactive=True),) * 3,
                 outputs=[reset_button, continue_button, finish_button],
                 queue=False
@@ -394,36 +398,23 @@ class ConversationForm(PairwiseForm):
                 outputs=[reset_button, continue_button, finish_button],
                 queue=False
             ).then(
-                self.__save_benchmark,
-                inputs=[id_input, chatbot, situation_description,
+                self.__finish_conversation,
+                inputs=[id_input, chatbot, situation_title,
                         question1, question2, question3,
                         question4, question5, question6,
                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
-                outputs=[ques_row1, ques_row2, ques_row3, pair_row,
-                         btn_row, situation_description,
+                outputs=[situation_description, situation_title,
+                         chatbot, ques_row1, ques_row2, ques_row3,
+                         pair_row, btn_row, finish_button, input_column,
+                         audio_record, text_input, last_row,
                          question1, question2, question3,
                          question4, question5, question6,
                          pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
-                queue=False,
-            ).then(
-                lambda: gr.update(visible=True),
-                inputs=None,
-                outputs=[input_column],
-                queue=True
-            ).then(
-                self.__finish_conversation,
-                inputs=situation_title,
-                outputs=[situation_title, situation_description, chatbot, audio_record, text_input, finish_button],
                 queue=True,
             ).then(
                 lambda: (gr.update(interactive=True),) * 3,
                 outputs=[reset_button, continue_button, finish_button],
                 queue=True
-            ).then(
-                lambda: gr.update(visible=True if self.situation_idx >= 2 else False),
-                inputs=None,
-                outputs=[last_row],
-                queue=False,
             )
             
             # last question submit button
@@ -603,12 +594,51 @@ class ConversationForm(PairwiseForm):
             return gr.update(visible=True), gr.update(visible=True)
         return gr.update(visible=True), gr.update(visible=False)
     
-    def __finish_conversation(self, situation_title):
+    def __finish_conversation(self,
+                             id_input, chatbot,
+                             situation_title, *args):
+        all_questions = list(args)
+        if None in all_questions:
+            gr.Warning(self.evaluation_check_msg)
+            return (gr.update(visible=True),) * 10 \
+                    + (gr.update(visible=False),) * 3 \
+                    + args
+        
+        # if self.random_num == 0 1=normal, 2=augmented
+        # else 1=augmented, 2=normal
+        if self.random_num == 0:
+            for i in range(-1, -5, -1):
+                all_questions[i] = "normal" if all_questions[i] == 1 else "augmented"
+        else:
+            for i in range(-1, -5, -1):
+                all_questions[i] = "augmented" if all_questions[i] == 1 else "normal"
+
+        message1, message2 = chatbot[-1][1].split('[Model 2]')
+        message1 = message1.replace("[Model 1]","").strip()
+        message2 = message2.strip()
+        
+        bot_message = dict()
+        bot_message['normal_model'] = message1 if self.random_num == 0 else message2
+        bot_message['augmented_model'] = message2 if self.random_num == 0 else message1
+        
+        content = dict()
+        content["mturk_worker_id"] = id_input
+        content["speech"] = chatbot[-1][0]
+        content["bot_message"] = bot_message
+        content["answer"] = all_questions
+        content["situation_index"] = self.situation_idx
+        self.logger.info(f"Benchmark: {str(content)}")
+        
+        del content["mturk_worker_id"]
+        del content["situation_index"]
+        self.data["result"][f"situation{self.situation_idx + 1}"].append(content)
+        
         self.scenario_count = 0
         self.situation_idx += 1
         if self.situation_idx > 2:
-            return (gr.update(visible=False), ) * 2 \
-                + (gr.update(value=None, visible=False), ) + (gr.update(visible=False),) * 3
+            return (gr.update(visible=False), ) * 12 \
+                    + (gr.update(visible=True),) \
+                    + (gr.update(visible=False),) * len(args)
         else:            
             from conversation.prompter import Prompter
             from models.chatgpt.core import ChatGPT
@@ -625,7 +655,12 @@ class ConversationForm(PairwiseForm):
                     self.model.generate_2 = Prompter(palm).prompt
             
             situation_msg = self.__get_current_scenario(self.scenario_count)
-            return (situation_title, gr.update(value=situation_msg), ) + (gr.update(value=None), ) * 3 + (gr.update(visible=False),)
+            return (gr.update(value=situation_msg), situation_title, gr.update(value=None),) \
+                    + (gr.update(visible=False),) * 6 \
+                    + (gr.update(visible=True),) \
+                    + (gr.update(value=None),) * 2 \
+                    + (gr.update(visible=False),) \
+                    + (gr.update(value=False),) * 10
     
     def __submit(self, id_input, *args):
         # 에외처리 필요
