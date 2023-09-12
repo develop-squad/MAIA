@@ -590,12 +590,12 @@ class ConversationForm(PairwiseForm):
         from conversation.prompter import Prompter
         from models.chatgpt.core import ChatGPT
             
-        chatgpt = ChatGPT()
+        chatgpt = ChatGPT(context=False)
         if type(self.model.generate_1) is type(chatgpt.prompt):
             self.model.generate_2 = Prompter(chatgpt).prompt
         else:
             from models.palm.core import PaLM
-            palm = PaLM()
+            palm = PaLM(context=False)
             if type(self.model.generate_1) is type(palm.prompt):
                 self.model.generate_2 = Prompter(palm).prompt
         
@@ -616,13 +616,13 @@ class ConversationForm(PairwiseForm):
             from conversation.prompter import Prompter
             from models.chatgpt.core import ChatGPT
             
-            chatgpt = ChatGPT()
+            chatgpt = ChatGPT(context=False)
             if type(self.model.generate_1) is type(chatgpt.prompt):
                 self.model.generate_1 = chatgpt.prompt
                 self.model.generate_2 = Prompter(chatgpt).prompt
             else:
                 from models.palm.core import PaLM
-                palm = PaLM()
+                palm = PaLM(context=False)
                 if type(self.model.generate_1) is type(palm.prompt):
                     self.model.generate_1 = palm.prompt
                     self.model.generate_2 = Prompter(palm).prompt
