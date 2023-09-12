@@ -1,7 +1,8 @@
+import os
 import fire
 from dotenv import load_dotenv
 from utils.launch import Launcher, LaunchConfig
-from utils.pipeline import Pipeline
+from utils.pipeline import Pipeline, PairwisePipeline
 
 load_dotenv()
 launcher = Launcher()
@@ -66,8 +67,9 @@ def run_googletts(google_tts_api_key: str = "", **kwargs):
 
 def main(**kwargs):
     from models.whisperx.core import WhisperX
-    from models.alpaca.core import Alpaca
+    from models.chatgpt.core import ChatGPT
     from models.googletts.core import GoogleTTS
+    from conversation.prompter import Prompter
     from conversation.form import ConversationForm
     
     whisper = WhisperX(
@@ -76,21 +78,20 @@ def main(**kwargs):
         compute_type="float32",
         batch_size=16,
     )
-    
-    alpaca = Alpaca(
-        device=launcher.get_device(),
-        load_8bit=True,
-        base_model="decapoda-research/llama-7b-hf",
-        lora_weights="tloen/alpaca-lora-7b",
-        prompt_template="maia",
+
+    chatgpt = ChatGPT(
+        api_key=os.environ.get("OPENAI_API_KEY"),
+        context=False,
     )
+    chatgpt_augmented = Prompter(chatgpt)
     
     googletts = GoogleTTS()
 
-    pipeline = Pipeline(
+    pipeline = PairwisePipeline(
         transcribe_model=whisper,
-        generate_model=alpaca,
-        synthesize_model=googletts,
+        generate_model_1=chatgpt,
+        generate_model_2=chatgpt_augmented,
+        synthesize_model=googletts
     )
 
     config = LaunchConfig(**kwargs)

@@ -3,7 +3,7 @@ import logging
 import random
 import os
 import os.path as osp
-from utils.pairwise_form import PairwiseForm 
+from utils.form import PairwiseForm 
 
 class ConversationForm(PairwiseForm):
     def __init__(self, model, title):
