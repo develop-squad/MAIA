@@ -56,7 +56,7 @@ class ConversationForm(PairwiseForm):
             gr.HTML(f"<h1 style=\"text-align: center;\">{self.title}</h1>")
 
             with gr.Tab("IRB Agreement"):
-                gr.Markdown(self.guidance['informed_consent'])
+                irb_msg = gr.Markdown(self.guidance['informed_consent'])
                 informed_consent = gr.Radio(
                     show_label=False,
                     choices=[("Agree", 1), ("Disagree", 0)],
@@ -273,8 +273,8 @@ class ConversationForm(PairwiseForm):
             
             irb_button.click(
                 self.__save_irb_agreement,
-                inputs=[informed_consent, irb_button],
-                outputs=[informed_consent, irb_button],
+                inputs=[informed_consent, irb_button, irb_msg],
+                outputs=[informed_consent, irb_button, irb_msg],
                 queue=False,
             )
             
@@ -433,10 +433,10 @@ class ConversationForm(PairwiseForm):
         
         return form
 
-    def __save_irb_agreement(self, irb_agreement, irb_button):
+    def __save_irb_agreement(self, irb_agreement, irb_button, irb_msg):
         if not irb_agreement:
-            return irb_agreement, irb_button
-        return (gr.update(interactive=False), ) * 2
+            return irb_agreement, irb_button, irb_msg
+        return (gr.update(visible=False), ) * 2 + (gr.update(value="### Please go to the System Guide tab."), )
     
     def __add_text(self, history, text_input):
         history = history + [(text_input, None)]
