@@ -26,6 +26,7 @@ class ConversationForm(PairwiseForm):
             "informed_consent": self.__load_guidance("informed_consent"),
             "experiment_description": self.__load_experiment_description("experiment_description", self.situations),
             "system_guide": self.__load_guidance("system_guide"),
+            "system_usage_instruction": self.__load_guidance("system_usage_instruction"),
         }
         self.situation_idx = 0
         self.data = {
@@ -82,7 +83,8 @@ class ConversationForm(PairwiseForm):
                         visible=False
                     )
                     situation_description = gr.Markdown(
-                        "\n".join([f"{i+1}. {situation}" for i, situation in enumerate(self.situations[self.situation_idx])]),
+                        self.guidance["system_usage_instruction"]
+                            .format("\n".join([f"{i+1}. {situation}" for i, situation in enumerate(self.situations[self.situation_idx])])),
                         visible=False
                     )
                 chatbot = gr.Chatbot(
