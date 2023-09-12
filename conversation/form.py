@@ -377,14 +377,10 @@ class ConversationForm(PairwiseForm):
                         question4, question5, question6,
                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
                 outputs=[ques_row1, ques_row2, ques_row3, pair_row,
-                         btn_row, situation_description, input_column,
+                         btn_row, finish_button, situation_description, input_column,
                          question1, question2, question3,
                          question4, question5, question6,
                          pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
-                queue=True,
-            ).then(
-                lambda: gr.update(visible=False),
-                outputs=finish_button,
                 queue=True,
             ).then(
                 lambda: (gr.update(interactive=True),) * 3,
@@ -497,7 +493,7 @@ class ConversationForm(PairwiseForm):
         all_questions = list(args)
         if None in all_questions:
             gr.Warning(self.evaluation_check_msg)
-            return (gr.update(visible=True),) * 5 + (situation_description, gr.update(visible=False),) + tuple(all_questions)
+            return (gr.update(visible=True),) * 6 + (situation_description, gr.update(visible=False),) + tuple(all_questions)
         
         # if self.random_num == 0 1=normal, 2=augmented
         # else 1=augmented, 2=normal
@@ -531,7 +527,7 @@ class ConversationForm(PairwiseForm):
         del content["situation_index"]
         self.data["result"][f"situation{self.situation_idx + 1}"].append(content)
 
-        return (gr.update(visible=False),) * 5 + (gr.update(value=description), gr.update(visible=True),) + (gr.update(value=None),) * len(args)
+        return (gr.update(visible=False),) * 6 + (gr.update(value=description), gr.update(visible=True),) + (gr.update(value=None),) * len(args)
     
     def __process(self, history):
         input = history[-1][0]
