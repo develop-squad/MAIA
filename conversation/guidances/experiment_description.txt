@@ -1,16 +1,16 @@
 ## Experiment Description
-### 1. Three situations will be given sequentially.
-* Situation 1
-1. {}
-2. {}
-3. {}
-* Situation 2
-1. {}
-2. {}
-3. {}
-* Situation 3
-1. {}
-2. {}
-3. {}
-### 2. Please converse with the IA according to the given situation guide.
-### 3. Once the conversation for the three situations is over, engage in a free talk with the IA for at least 3 turns.
+1. Three situations will be given sequentially.
+    * Situation 1
+        1. {}
+        2. {}
+        3. {}
+    * Situation 2
+        1. {}
+        2. {}
+        3. {}
+    * Situation 3
+        1. {}
+        2. {}
+        3. {}
+2. Converse with the IA according to the given situation guide.
+3. Once the conversation for the three situations is over, engage in a free talk with the IA for at least 3 turns.

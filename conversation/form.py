@@ -77,14 +77,14 @@ class ConversationForm(PairwiseForm):
                         save_id_button = gr.Button("Save MTurk Worker ID")
 
                 with gr.Column():
-                    situation_title = gr.Markdown("## Current situation guide",
-                                                  visible=False)
-                    situation_description = gr.Markdown(f'''
-                                                        1. {self.situations[self.situation_idx][0]}
-                                                        2. {self.situations[self.situation_idx][1]}
-                                                        3. {self.situations[self.situation_idx][2]}
-                                                        ''',
-                                                        visible=False)
+                    situation_title = gr.Markdown(
+                        "## System Usage Instruction",
+                        visible=False
+                    )
+                    situation_description = gr.Markdown(
+                        "\n".join([f"{i+1}. {situation}" for i, situation in enumerate(self.situations[self.situation_idx])]),
+                        visible=False
+                    )
                 chatbot = gr.Chatbot(
                     elem_id="chatbot",
                     visible=False
@@ -180,8 +180,10 @@ class ConversationForm(PairwiseForm):
                         show_label=False,
                         visible=False
                     )
-                    text_input_message = gr.Markdown("Please use Text input when microphone is not working well.",
-                                                     visible=False)
+                    text_input_message = gr.Markdown(
+                        "Please use Text input when microphone is not working well.",
+                        visible=False
+                    )
                     text_input.style(container=False)
                     text_input_button = gr.Button(
                         "Save evaluation results",

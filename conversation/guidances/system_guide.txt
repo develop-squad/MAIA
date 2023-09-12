@@ -1,12 +1,12 @@
 ## System Guide
-### 1. Enter your MTurk Worker ID and click the "Save MTurk Worker ID" button.
-### 2. Click the "Record from microphone" button, wait for 2 seconds, and start speaking.
-### 3. Once you've finished speaking, click the "Stop recording" button to complete the recording.
-### 4. Please wait for the IA to respond.
-### 5. Evaluate all ten items for [Model 1] and [Model 2].
-### 6. Once you've evaluated everything, click the "x" button above the recorded voice and repeat from step 2 to complete the given situation.
-### 7. Once you've completed all the conversations for the given situation, click the "Finish this conversation" button.
-### 8. The following situation will be provided. Please repeat steps 2 to 7.
-### 9. After completing all three situations and clicking the "Finish this conversation" button, proceed with the final evaluation and click the "Submit" button.
-### 10. Please conduct the "Usability Evaluation."
-### * If you cannot proceed at any intermediate step, click the "Reset this conversation" button, and you can start again from step 2.
+1. Enter your MTurk Worker ID and click the **Save MTurk Worker ID** button.
+2. Click the **Record from microphone** button, wait for 2 seconds, and start speaking.
+3. Once you've finished speaking, click the **Stop recording** button to complete the recording.
+4. Please wait for the IA to respond.
+5. Evaluate all ten items for [Model 1] and [Model 2].
+6. Once you've evaluated everything, click the **x** button above the recorded voice and repeat from step 2 to complete the given situation.
+7. Once you've completed all the conversations for the given situation, click the **Finish this conversation** button.
+8. The following situation will be provided. Please repeat steps 2 to 7.
+9. After completing all three situations and clicking the **Finish this conversation** button, proceed with the final evaluation and click the **Submit** button.
+10. Please conduct the **Usability Evaluation**.
+* If you cannot proceed at any intermediate step, click the **Reset this conversation** button, and you can start again from step 2.
