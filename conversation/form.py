@@ -2,6 +2,7 @@ import gradio as gr
 import logging
 import random
 import os
+import os.path as osp
 from utils.pairwise_form import PairwiseForm 
 
 class ConversationForm(PairwiseForm):
@@ -19,70 +20,16 @@ class ConversationForm(PairwiseForm):
                 ("Model 2", 2),
             ],
         }
-        self.situations = [
-            [
-                "당신의 물건 하나를 선정하여 어디에 있는지 어시스턴트에게 알려주어라.",
-                "건강에 좋은 음식을 주제로 대화를 5턴 해보아라.",
-                "처음 이야기한 물건을 어시스턴트가 기억하고 있는지 구체적으로 질문해 보아라.",
-            ],
-            [
-                "최근에 복용했던 약이 무엇인지, 언제 복용했는지 어시스턴트에게 알려주어라.",
-                "운동을 주제로 대화를 5턴 해보아라.",
-                "처음에 알려주었던 약에 대해서 어시스턴트가 기억하는 지 질문해보아라."
-            ],
-            [
-                "어시스턴트에게 스트레스 해소 방법을 질문해보아라.",
-                "주의해야할 질병을 주제로 대화를 5턴 해보아라.",
-                "처음에 어시스턴트가 어떤 스트레스 해소 방법을 알려주었는지 질문해보아라."
-            ]
-        ]
+        self.situations = self.__load_scenario("hit")
         self.guidance = {
-            "irb_agreement":
-                '''
-                ## IRB Agreement
-                ### 연구과제명 : 기억력 증강 대화 모델을 적용한 인텔리전트 어시스턴트
-                본 연구는 기억력 증강 대화 모델을 통해 인텔리전트 어시스턴트(IA)의 기억 능력을 개선하는 연구입니다.
-                IA는 음성 언어를 사용하여 사람과의 상호작용하며 일상생활을 지능적으로 지원하는 컴퓨터 시스템입니다.
-                기존 IA는 장기적인 기억 능력이 부족하여 사용자와의 과거 대화나 선호도, 상태 및 행동을 충분히 반영하지 못하고 있습니다.
-                본 연구를 통해, IA가 보다 개인화 된 경험을 사용자에게 제공할 수 있도록 하기 위한 방안을 탐구하고자 합니다.
-                ''',
-            "experiment_description":
-                f'''
-                ## Experiment Description
-                ### 1. 3가지 상황이 순차적으로 주어집니다.
-                * 상황 1
-                1. {self.situations[0][0]}
-                2. {self.situations[0][1]}
-                3. {self.situations[0][2]}
-                * 상황 2
-                1. {self.situations[1][0]}
-                2. {self.situations[1][1]}
-                3. {self.situations[1][2]}
-                * 상황 3
-                1. {self.situations[2][0]}
-                2. {self.situations[2][1]}
-                3. {self.situations[2][2]}
-                ### 2. 주어지는 상황 가이드에 따라 IA와 대화해주세요.
-                ### 3. 3가지 상황에 한 대화가 끝나면 자유롭게 IA와 대화해주세요.
-                ''',
-            "system_guide":
-                '''
-                ## System guide
-                ### 1. MTurk Worker ID를 입력하고 "Save MTurk Worker ID" 버튼을 클릭하세요.
-                ### 2. "Record from microphone" 버튼을 클릭하고 2초 대기 후 발화를 시작해주세요.
-                ### 3. 발화가 끝났으면 "Stop recording" 버튼을 클릭하여 녹음을 완료해주세요.
-                ### 4. IA가 답변하는 것을 기다려주세요.
-                ### 5. [Model 1]과 [Model 2]에 대한 10가지 항목을 모두 평가해주세요.
-                ### 6. 모두 평가했다면, 녹음된 음성 위의 x 버튼을 클릭하고, 다시 2단계부터 반복하여 주어진 상황을 완료해주세요.
-                ### 7. 주어진 상황에 맞게 대화를 모두 완료했다면, "Finish this conversation" 버튼을 클릭해주세요.
-                ### 8. 다음 상황이 주어집니다. 2단계부터 7단계를 반복해주세요.
-                ### 8. 세 번째 상황까지 모두 완료하고 "Finish this conversation" 버튼을 눌렀다면, 최종 평가를 진행하고 "Submit" 버튼을 클릭해주세요.
-                ### 9. "Usability Evaluation" 사용성 평가를 진행해주세요.
-                ### * 중간 단계에서 진행이 안된다면, "Reset this conversation" 버튼을 클릭하여 2단계부터 다시 진행할 수 있습니다.
-                '''
+            "informed_consent": self.__load_guidance("informed_consent"),
+            "experiment_description": self.__load_experiment_description("experiment_description", self.situations),
+            "system_guide": self.__load_guidance("system_guide"),
         }
         self.situation_idx = 0
+
         super().__init__(model=model, title=title)
+        
         self.logger = logging.getLogger()
         self.logger.setLevel(logging.INFO)
         self.formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -96,8 +43,8 @@ class ConversationForm(PairwiseForm):
             gr.HTML(f"<h1 style=\"text-align: center;\">{self.title}</h1>")
 
             with gr.Tab("IRB Agreement"):
-                gr.Markdown(self.guidance['irb_agreement'])
-                irb_agreement = gr.Radio(
+                gr.Markdown(self.guidance['informed_consent'])
+                informed_consent = gr.Radio(
                     show_label=False,
                     choices=[("Agree", 1), ("Disagree", 0)],
                     container=False
@@ -304,8 +251,8 @@ class ConversationForm(PairwiseForm):
             
             irb_button.click(
                 self.__save_irb_agreement,
-                inputs=[irb_agreement, irb_button],
-                outputs=[irb_agreement, irb_button],
+                inputs=[informed_consent, irb_button],
+                outputs=[informed_consent, irb_button],
                 queue=False,
             )
             
@@ -590,3 +537,32 @@ class ConversationForm(PairwiseForm):
             return gr.update(visible=False), \
                     gr.update(value="### Thank you :)"), \
                     gr.update(visible=True)
+    
+    def __load_scenario(self, prefix: str) -> list[str]:
+        index = 1
+        scenarios = []
+
+        while True:
+            filepath = osp.join("conversation", "scenarios", f"{prefix}{index}.txt")
+            if osp.exists(filepath):
+                with open(filepath, "r") as file:
+                    scenario = [line.strip() for line in file.readlines()]
+                    self.scenario.append(scenario)
+                index += 1
+            else:
+                break
+        
+        return scenarios
+    
+    def __load_guidance(self, name: str) -> str:
+        with open(osp.join("conversation", "guidance", name), "r", encoding="utf-8") as file:
+            return file.read()
+    
+    def __load_experiment_description(self, name: str, situations: list[str]) -> str:
+        with open(osp.join("conversation", "guidance", name), "r", encoding="utf-8") as file:
+            description = file.read().format(
+                "\n".join(situations[0]),
+                "\n".join(situations[1]),
+                "\n".join(situations[2]),
+            )
+            return description
