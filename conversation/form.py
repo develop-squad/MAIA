@@ -280,14 +280,19 @@ class ConversationForm(PairwiseForm):
                 outputs=[chatbot, text_input],
                 queue=False,
             ).then(
+                lambda: gr.update(interactive=False),
+                inputs=None,
+                outputs=[audio_record],
+                queue=False
+            ).then(
                 self.__process,
                 inputs=chatbot,
                 outputs=chatbot,
                 queue=True
             ).then(
-                lambda: gr.update(interactive=True),
+                lambda: (gr.update(interactive=True), ) * 2,
                 inputs=None,
-                outputs=[text_input],
+                outputs=[text_input, audio_record],
                 queue=False
             ).then(
                 self.__activate_benchmark,
