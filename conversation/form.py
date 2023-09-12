@@ -352,6 +352,10 @@ class ConversationForm(PairwiseForm):
                 lambda: gr.update(visible=False),
                 outputs=[btn_row],
                 queue=False
+            ).then(
+                lambda: gr.update(value=self.__get_current_scenario(self.scenario_count)),
+                outputs=[situation_description],
+                queue=True
             )
             
             # continue button
