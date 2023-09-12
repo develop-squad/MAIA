@@ -132,7 +132,7 @@ class ConversationForm(PairwiseForm):
                         label="[Model 2] Are you interested in the response? Would you like to continue the conversation?",
                         show_label=True,
                     )
-                with gr.Row(visible=False) as pair_row1:
+                with gr.Row(visible=False) as pair_row:
                     pairwise_question1 = gr.Radio(
                         choices=self.scales["comparison"],
                         label="Which response makes more sense?",
@@ -143,7 +143,6 @@ class ConversationForm(PairwiseForm):
                         label="Which response is more consistent?",
                         show_label=True,
                     )
-                with gr.Row(visible=False) as pair_row2:
                     pairwise_question3 = gr.Radio(
                         choices=self.scales["comparison"],
                         label="Which response is more interesting?",
@@ -291,8 +290,8 @@ class ConversationForm(PairwiseForm):
                          pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
                 queue=True,
             ).then(
-                lambda: (gr.update(visible=True),) * 5,
-                outputs=[ques_row1, ques_row2, ques_row3, pair_row1, pair_row2],
+                lambda: (gr.update(visible=True),) * 4,
+                outputs=[ques_row1, ques_row2, ques_row3, pair_row],
                 queue=True,
             ).then(
                 self.__select_btn,
@@ -325,8 +324,8 @@ class ConversationForm(PairwiseForm):
                 outputs=[text_input, audio_record],
                 queue=True
             ).then(
-                lambda: (gr.update(visible=True),) * 5,
-                outputs=[ques_row1, ques_row2, ques_row3, pair_row1, pair_row2],
+                lambda: (gr.update(visible=True),) * 4,
+                outputs=[ques_row1, ques_row2, ques_row3, pair_row],
                 queue=True,
             ).then(
                 self.__select_btn,
@@ -341,7 +340,7 @@ class ConversationForm(PairwiseForm):
                 outputs=[question1, question2, question3,
                          question4, question5, question6,
                          pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4,
-                         ques_row1, ques_row2, ques_row3, pair_row1, pair_row2],
+                         ques_row1, ques_row2, ques_row3, pair_row],
                 queue=True
             ).then(
                 lambda: (gr.update(value=None),) * 2,
@@ -370,7 +369,7 @@ class ConversationForm(PairwiseForm):
                         question1, question2, question3,
                         question4, question5, question6,
                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
-                outputs=[ques_row1, ques_row2, ques_row3, pair_row1, pair_row2,
+                outputs=[ques_row1, ques_row2, ques_row3, pair_row,
                          btn_row, situation_description,
                          question1, question2, question3,
                          question4, question5, question6,
@@ -385,7 +384,7 @@ class ConversationForm(PairwiseForm):
                         question1, question2, question3,
                         question4, question5, question6,
                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
-                outputs=[ques_row1, ques_row2, ques_row3, pair_row1, pair_row2,
+                outputs=[ques_row1, ques_row2, ques_row3, pair_row,
                          btn_row, situation_description,
                          question1, question2, question3,
                          question4, question5, question6,
@@ -516,7 +515,7 @@ class ConversationForm(PairwiseForm):
         del content["situation_index"]
         self.data["result"][f"situation{self.situation_idx + 1}"].append(content)
 
-        return (gr.update(visible=False),) * 6 + (gr.update(value=description),) + (gr.update(value=None),) * len(args)
+        return (gr.update(visible=False),) * 5 + (gr.update(value=description),) + (gr.update(value=None),) * len(args)
     
     def __process(self, history):
         input = history[-1][0]
@@ -572,7 +571,7 @@ class ConversationForm(PairwiseForm):
             if type(self.model.generate_1) is type(palm.prompt):
                 self.model.generate_2 = Prompter(palm).prompt
         
-        return (gr.update(value=None),) * 10 + (gr.update(visible=False),) * 5
+        return (gr.update(value=None),) * 10 + (gr.update(visible=False),) * 4
     
     def __select_btn(self):
         if self.scenario_count >= 6:
