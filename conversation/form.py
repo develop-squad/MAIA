@@ -167,38 +167,32 @@ class ConversationForm(PairwiseForm):
                         placeholder=self.text_input_hint
                     )
                     text_input.style(container=False)
-                with gr.Row():
+                with gr.Row(visible=False) as btn_row:
                     reset_button = gr.Button(
                         "Reset this conversation",
-                        visible=False
                     )
                     continue_button = gr.Button(
                         "Continue this conversation",
-                        visible=False,
                     )
-                with gr.Column():
-                    finish_message = gr.Markdown(
+                finish_message = gr.Markdown(
                         "### Thank you! :)",
                         visible=False,
-                        show_label=False
+                        show_label=False,
                     )
-                with gr.Column():
-                    finish_button = gr.Button(
-                        "Finish this conversation",
-                        visible=False
-                    )
-                with gr.Row():
+                finish_button = gr.Button(
+                    "Finish this conversation",
+                    visible=False
+                )
+                with gr.Row(visible=False) as last_row:
                     with gr.Column(scale=0.7):
                         last_question = gr.Radio(
                             choices=self.scales["likert"],
                             label="How was the conversation?",
                             show_label=True,
-                            visible=False,
                         )
                     with gr.Column(scale=0.3, min_width=0):
                         submit_button = gr.Button(
                             "Submit",
-                            visible=False,
                         )
             with gr.Tab("Usability Evaluation"):
                 with gr.Column(visible=True) as usability_message_ui:
@@ -301,8 +295,8 @@ class ConversationForm(PairwiseForm):
                 outputs=[ques_row1, ques_row2, ques_row3, pair_row1, pair_row2],
                 queue=True,
             ).then(
-                lambda: (gr.update(visible=True),) * 3,
-                outputs=[reset_button, continue_button, finish_button],
+                lambda: (gr.update(visible=True),) * 2,
+                outputs=[btn_row, finish_button],
                 queue=False
             )
             
@@ -335,8 +329,8 @@ class ConversationForm(PairwiseForm):
                 outputs=[ques_row1, ques_row2, ques_row3, pair_row1, pair_row2],
                 queue=True,
             ).then(
-                lambda: (gr.update(visible=True), ) * 3,
-                outputs=[continue_button, reset_button, finish_button],
+                lambda: (gr.update(visible=True), ) * 2,
+                outputs=[btn_row, finish_button],
                 queue=False
             )
             
@@ -346,7 +340,8 @@ class ConversationForm(PairwiseForm):
                 inputs=id_input,
                 outputs=[question1, question2, question3,
                          question4, question5, question6,
-                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
+                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4,
+                         ques_row1, ques_row2, ques_row3, pair_row1, pair_row2],
                 queue=True
             ).then(
                 lambda: (gr.update(value=None),) * 2,
@@ -354,8 +349,8 @@ class ConversationForm(PairwiseForm):
                 outputs=[chatbot, audio_record],
                 queue=True
             ).then(
-                lambda: (gr.update(visible=False),) * 3,
-                outputs=[reset_button, finish_button, continue_button],
+                lambda: (gr.update(visible=False),) * 2,
+                outputs=[btn_row, finish_button],
                 queue=False
             )
             
@@ -368,12 +363,11 @@ class ConversationForm(PairwiseForm):
             ).then(
                 self.__save_benchmark,
                 inputs=[id_input, chatbot,
-                        reset_button, continue_button,
                         question1, question2, question3,
                         question4, question5, question6,
                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
                 outputs=[ques_row1, ques_row2, ques_row3, pair_row1, pair_row2,
-                         reset_button, continue_button,
+                         btn_row,
                          question1, question2, question3,
                          question4, question5, question6,
                          pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
@@ -387,9 +381,9 @@ class ConversationForm(PairwiseForm):
                 outputs=[situation_title, situation_description, chatbot, audio_record, text_input, finish_button],
                 queue=True,
             ).then(
-                self.__activate_assistant,
+                self.__activate_last_question,
                 inputs=[last_question, submit_button],
-                outputs=[last_question, submit_button],
+                outputs=[last_row],
                 queue=False
             )
             
@@ -452,12 +446,10 @@ class ConversationForm(PairwiseForm):
             return audio
         return gr.update(value=None)
     
-    def __save_benchmark(self, id_input, chatbot, reset_button, continue_button, *args):
+    def __save_benchmark(self, id_input, chatbot, *args):
         all_questions = list(args)
         if None in all_questions:
-            return (gr.update(visible=True),) * 5 \
-                    + (reset_button, continue_button,) \
-                    + tuple(all_questions)
+            return (gr.update(visible=True),) * 6 + tuple(all_questions)
         
         # if self.random_num == 0 1=normal, 2=augmented
         # else 1=augmented, 2=normal
@@ -488,7 +480,7 @@ class ConversationForm(PairwiseForm):
         del content["situation_index"]
         self.data["result"][f"situation{self.situation_idx + 1}"].append(content)
 
-        return (gr.update(visible=False),) * 7 + (gr.update(value=None),) * len(args)
+        return (gr.update(visible=False),) * 6 + (gr.update(value=None),) * len(args)
     
     def __process(self, history):
         input = history[-1][0]
@@ -543,11 +535,11 @@ class ConversationForm(PairwiseForm):
             if type(self.model.generate_1) is type(palm.prompt):
                 self.model.generate_2 = Prompter(palm).prompt
         
-        return (gr.update(value=None, visible=False), ) * 10
+        return (gr.update(value=None),) * 10 + (gr.update(visible=False),) * 5
     
-    def __activate_assistant(self, *args):
+    def __activate_last_question(self, *args):
         if self.situation_idx > 2:
-            return (gr.update(visible=True), ) * len(args)
+            return gr.update(visible=True)
         else:
             return args
     
@@ -597,9 +589,7 @@ class ConversationForm(PairwiseForm):
         if len(args) == 1:
             return (gr.update(visible=False), ) * 3 + (gr.update(visible=True), ) * 2
         else:
-            return gr.update(visible=False), \
-                    gr.update(value="### Thank you :)"), \
-                    gr.update(visible=True)
+            return gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)
     
     def __load_scenario(self, prefix: str) -> list[str]:
         index = 1
