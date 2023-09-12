@@ -372,7 +372,7 @@ class ConversationForm(PairwiseForm):
                 queue=True,
             ).then(
                 self.__save_benchmark,
-                inputs=[id_input, chatbot, situation_description,
+                inputs=[id_input, chatbot, finish_button, situation_description,
                         question1, question2, question3,
                         question4, question5, question6,
                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
@@ -489,11 +489,11 @@ class ConversationForm(PairwiseForm):
             return audio
         return gr.update(value=None)
     
-    def __save_benchmark(self, id_input, chatbot, situation_description, *args):
+    def __save_benchmark(self, id_input, chatbot, finish_button, situation_description, *args):
         all_questions = list(args)
         if None in all_questions:
             gr.Warning(self.evaluation_check_msg)
-            return (gr.update(visible=True),) * 6 + (situation_description, gr.update(visible=False),) + tuple(all_questions)
+            return (gr.update(visible=True),) * 5 + (finish_button, situation_description, gr.update(visible=False),) + tuple(all_questions)
         
         # if self.random_num == 0 1=normal, 2=augmented
         # else 1=augmented, 2=normal
