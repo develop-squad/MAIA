@@ -29,6 +29,7 @@ class ConversationForm(PairwiseForm):
             "system_usage_instruction": self.__load_guidance("system_usage_instruction"),
         }
         self.situation_idx = 0
+        self.scenario_count = 1
         self.data = {
             "mturk_worker_id": "N/A",
             "result": {
@@ -84,8 +85,7 @@ class ConversationForm(PairwiseForm):
                         visible=False
                     )
                     situation_description = gr.Markdown(
-                        self.guidance["system_usage_instruction"]
-                            .format("\n".join([f"{i+1}. {situation}" for i, situation in enumerate(self.situations[self.situation_idx])])),
+                        self.__get_current_scenario(self.scenario_count),
                         visible=False
                     )
                 chatbot = gr.Chatbot(
@@ -197,7 +197,7 @@ class ConversationForm(PairwiseForm):
             with gr.Tab("Usability Evaluation"):
                 with gr.Column(visible=True) as usability_message_ui:
                     usability_message = gr.Markdown("### Please use the \"System\" first.")
-                with gr.Column(visible=False) as usability_ui:
+                with gr.Column(visible=False) as usability_row:
                     usability_question1 = gr.Radio(
                         choices=self.scales["likert"],
                         label="I think that I would like to use this system frequently.",
@@ -295,8 +295,8 @@ class ConversationForm(PairwiseForm):
                 outputs=[ques_row1, ques_row2, ques_row3, pair_row1, pair_row2],
                 queue=True,
             ).then(
-                lambda: (gr.update(visible=True),) * 2,
-                outputs=[btn_row, finish_button],
+                lambda: gr.update(visible=True),
+                outputs=[btn_row],
                 queue=False
             )
             
@@ -329,8 +329,8 @@ class ConversationForm(PairwiseForm):
                 outputs=[ques_row1, ques_row2, ques_row3, pair_row1, pair_row2],
                 queue=True,
             ).then(
-                lambda: (gr.update(visible=True), ) * 2,
-                outputs=[btn_row, finish_button],
+                lambda: gr.update(visible=True),
+                outputs=[btn_row],
                 queue=False
             )
             
@@ -349,8 +349,8 @@ class ConversationForm(PairwiseForm):
                 outputs=[chatbot, audio_record],
                 queue=True
             ).then(
-                lambda: (gr.update(visible=False),) * 2,
-                outputs=[btn_row, finish_button],
+                lambda: gr.update(visible=False),
+                outputs=[btn_row],
                 queue=False
             )
             
@@ -362,12 +362,12 @@ class ConversationForm(PairwiseForm):
                 queue=True,
             ).then(
                 self.__save_benchmark,
-                inputs=[id_input, chatbot,
+                inputs=[id_input, chatbot, situation_description,
                         question1, question2, question3,
                         question4, question5, question6,
                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
                 outputs=[ques_row1, ques_row2, ques_row3, pair_row1, pair_row2,
-                         btn_row,
+                         btn_row, situation_description,
                          question1, question2, question3,
                          question4, question5, question6,
                          pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
@@ -381,10 +381,10 @@ class ConversationForm(PairwiseForm):
                 outputs=[situation_title, situation_description, chatbot, audio_record, text_input, finish_button],
                 queue=True,
             ).then(
-                self.__activate_last_question,
-                inputs=[last_question, submit_button],
+                lambda: gr.update(visible=True),
+                inputs=None,
                 outputs=[last_row],
-                queue=False
+                queue=False,
             )
             
             # last question submit button
@@ -392,7 +392,7 @@ class ConversationForm(PairwiseForm):
                 self.__submit,
                 inputs=[id_input, last_question],
                 outputs=[last_question, submit_button, usability_message_ui,
-                         finish_message, usability_ui],
+                         last_row, usability_row],
                 queue=True,
             )
             
@@ -410,11 +410,28 @@ class ConversationForm(PairwiseForm):
                         usability_question8,
                         usability_question9,
                         usability_question10,],
-                outputs=[usability_ui, usability_message, usability_message_ui],
+                outputs=[usability_row, usability_message, usability_message_ui],
                 queue=True
             )
         
         return form
+
+    def __get_current_scenario(self, scenario_count):
+        scenario_idx = 0
+        if scenario_count <= 1:
+            scenario_idx = 0
+        elif scenario_count >= 2 and scenario_count <= 6:
+            scenario_idx = 1
+        else:
+            scenario_idx = 2
+        
+        description = self.guidance["system_usage_instruction"].format(
+            "\n".join([f"{i+1}. {situation}"
+                       if i != scenario_idx
+                       else f"<span style=\"color:red\">{i+1}. {situation}</span>"
+                       for i, situation in enumerate(self.situations[self.situation_idx])]))    
+        
+        return description
 
     def __save_irb_agreement(self, irb_agreement, irb_button, irb_msg):
         if not irb_agreement:
@@ -446,10 +463,10 @@ class ConversationForm(PairwiseForm):
             return audio
         return gr.update(value=None)
     
-    def __save_benchmark(self, id_input, chatbot, *args):
+    def __save_benchmark(self, id_input, chatbot, situation_description, *args):
         all_questions = list(args)
         if None in all_questions:
-            return (gr.update(visible=True),) * 6 + tuple(all_questions)
+            return (gr.update(visible=True),) * 6 + (situation_description,) + tuple(all_questions)
         
         # if self.random_num == 0 1=normal, 2=augmented
         # else 1=augmented, 2=normal
@@ -468,6 +485,9 @@ class ConversationForm(PairwiseForm):
         bot_message['normal_model'] = message1 if self.random_num == 0 else message2
         bot_message['augmented_model'] = message2 if self.random_num == 0 else message1
         
+        self.scenario_count += 1
+        description = self.__get_current_scenario(self.scenario_count)
+        
         content = dict()
         content["mturk_worker_id"] = id_input
         content["speech"] = chatbot[-1][0]
@@ -480,7 +500,7 @@ class ConversationForm(PairwiseForm):
         del content["situation_index"]
         self.data["result"][f"situation{self.situation_idx + 1}"].append(content)
 
-        return (gr.update(visible=False),) * 6 + (gr.update(value=None),) * len(args)
+        return (gr.update(visible=False),) * 6 + (gr.update(value=description),) + (gr.update(value=None),) * len(args)
     
     def __process(self, history):
         input = history[-1][0]
@@ -520,6 +540,7 @@ class ConversationForm(PairwiseForm):
         content['mturk_worker_id'] = id_input
         content["situation_index"] = self.situation_idx
         content['message'] = "The conversation history has been reset."
+        self.scenario_count = 1
         self.logger.info(f"Benchmark: {str(content)}")
         self.data["result"][f"situation{self.situation_idx + 1}"].clear()
 
@@ -537,13 +558,8 @@ class ConversationForm(PairwiseForm):
         
         return (gr.update(value=None),) * 10 + (gr.update(visible=False),) * 5
     
-    def __activate_last_question(self, *args):
-        if self.situation_idx > 2:
-            return gr.update(visible=True)
-        else:
-            return args
-    
     def __finish_conversation(self, situation_title):
+        self.scenario_count = 1
         self.situation_idx += 1
         if self.situation_idx > 2:
             return (gr.update(visible=False), ) * 2 \
