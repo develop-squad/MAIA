@@ -67,7 +67,6 @@ def run_googletts(google_tts_api_key: str = "", **kwargs):
 def main(**kwargs):
     from models.whisperx.core import WhisperX
     from models.chatgpt.core import ChatGPT
-    from models.googletts.core import GoogleTTS
     from conversation.prompter import Prompter
     from conversation.form import ConversationForm
     
@@ -82,14 +81,11 @@ def main(**kwargs):
         context=False,
     )
     chatgpt_augmented = Prompter(chatgpt)
-    
-    googletts = GoogleTTS()
 
     pipeline = PairwisePipeline(
         transcribe_model=whisper,
         generate_model_1=chatgpt,
         generate_model_2=chatgpt_augmented,
-        synthesize_model=googletts
     )
 
     config = LaunchConfig(**kwargs)

@@ -5,12 +5,12 @@ class Pipeline(Model):
         self,
         transcribe_model: Model,
         generate_model: Model,
-        synthesize_model: Model,
+        #synthesize_model: Model,
         forced_response: str = "",
     ):
         self.transcribe = transcribe_model.fn
         self.generate = generate_model.fn
-        self.synthesize = synthesize_model.fn
+        #self.synthesize = synthesize_model.fn
         self.forced_response = forced_response
 
         self.setup_interface(
@@ -19,7 +19,7 @@ class Pipeline(Model):
             outputs=[
                 *transcribe_model.outputs,
                 *generate_model.outputs,
-                *synthesize_model.outputs,
+                #*synthesize_model.outputs,
             ],
         )
     
@@ -31,9 +31,9 @@ class Pipeline(Model):
         else:
             message = "".join(self.generate(transcript))
 
-        speech = self.synthesize(message)
+        #speech = self.synthesize(message)
 
-        return transcript, message, speech
+        return transcript, message
 
 class PairwisePipeline(Pipeline):
     def __init__(
@@ -41,13 +41,11 @@ class PairwisePipeline(Pipeline):
         transcribe_model: Model,
         generate_model_1: Model,
         generate_model_2: Model,
-        synthesize_model: Model,
         forced_response: str = "",
     ):
         self.transcribe = transcribe_model.fn
         self.generate_1 = generate_model_1.fn
         self.generate_2 = generate_model_2.fn
-        self.synthesize = synthesize_model.fn
         self.forced_response = forced_response
 
         self.setup_interface(
@@ -57,7 +55,6 @@ class PairwisePipeline(Pipeline):
                 *transcribe_model.outputs,
                 *generate_model_1.outputs,
                 *generate_model_2.outputs,
-                *synthesize_model.outputs,
             ],
         )
     
@@ -70,7 +67,4 @@ class PairwisePipeline(Pipeline):
             message1 = "".join(self.generate_1(transcript))
             message2 = "".join(self.generate_2(transcript))
 
-        speech1 = self.synthesize(message1)
-        speech2 = self.synthesize(message2)
-
-        return transcript, message1, speech1, message2, speech2
+        return transcript, message1, message2
