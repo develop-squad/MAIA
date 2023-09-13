@@ -76,8 +76,8 @@ class Prompter(Model):
                 return response
             except Exception as e:
                 print(f"Attempt {attempts+1} failed with error: {e}")
-                if attempts < 2:
-                    time.sleep(0.5)
+                if attempts < 3:
+                    time.sleep(1)
                 attempts += 1
         return "Sorry, there was an error processing your request. Please try again, and if the error persists, reset the conversation and start over."
     

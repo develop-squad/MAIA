@@ -32,6 +32,7 @@ class ConversationForm(PairwiseForm):
             "experiment_description": self.__load_experiment_description("experiment_description", self.situations),
             "system_guide": self.__load_guidance("system_guide"),
             "system_usage_instruction": self.__load_guidance("system_usage_instruction"),
+            "end_of_tasks": self.__load_guidance("end_of_tasks"),
         }
         self.situation_idx = 0
         self.scenario_count = 0
@@ -49,7 +50,6 @@ class ConversationForm(PairwiseForm):
         self.data_path = "results"
         self.text_input_hint="If the microphone malfunctions, use text input."
         self.evaluation_check_msg = "Please complete all survey questions."
-        self.all_finish_msg = "### All tasks have been finished. Thank you for your participation."
 
         super().__init__(model=model, title=title)
         
@@ -729,7 +729,7 @@ class ConversationForm(PairwiseForm):
                     + (gr.update(visible=True),) * 2
         else:
             return gr.update(visible=False), \
-                    gr.update(visible=True, value=self.all_finish_msg), \
+                    gr.update(visible=True, value=self.guidance["end_of_tasks"]), \
                     gr.update(visible=True)
     
     def __load_scenario(self, prefix: str) -> list[str]:
