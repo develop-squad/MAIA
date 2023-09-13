@@ -51,7 +51,7 @@ class PairwisePipeline(Pipeline):
         self.transcribe = transcribe_model.fn
         self.generate_1 = generate_model_1.fn
         self.generate_2 = generate_model_2.fn
-        
+
         self.forced_response = forced_response
 
         self.setup_interface(
@@ -70,6 +70,11 @@ class PairwisePipeline(Pipeline):
         if self.forced_response:
             message1 = message2 = self.forced_response
         else:
+            if not self.generate_model_1.model_loaded:
+                self.generate_model_1.reset()
+            if not self.generate_model_2.model_loaded:
+                self.generate_model_2.reset()
+
             message1 = "".join(self.generate_1(transcript))
             message2 = "".join(self.generate_2(transcript))
 

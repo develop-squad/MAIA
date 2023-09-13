@@ -4,6 +4,7 @@ import random
 import json
 import os
 import os.path as osp
+import copy
 from utils.form import PairwiseForm
 from utils.pipeline import PairwisePipeline
 
@@ -38,19 +39,20 @@ class ConversationForm(PairwiseForm):
             "system_usage_instruction": self.__load_guidance("system_usage_instruction"),
             "end_of_tasks": self.__load_guidance("end_of_tasks"),
         }
-        self.situation_idx = 0
-        self.scenario_count = 0
-        self.data = {
-            "mturk_worker_id": "N/A",
-            "result": {
-                "situation1": list(),
-                "situation2": list(),
-                "situation3": list(),
-                "freetalk": list(),
-                "last_answer": -1,          # -1 means None(=null)
-                "usability_answer": list()
-            }
-        }
+        self.user_temp = {}
+        self.user_data = {}
+        self.user_model = {}
+        # self.data = {
+        #     "mturk_worker_id": "N/A",
+        #     "result": {
+        #         "situation1": list(),
+        #         "situation2": list(),
+        #         "situation3": list(),
+        #         "freetalk": list(),
+        #         "last_answer": -1,          # -1 means None(=null)
+        #         "usability_answer": list()
+        #     }
+        # }
         self.data_path = "results"
         self.text_input_hint="If the microphone malfunctions, use text input."
         self.evaluation_check_msg = "Please complete all survey questions."
@@ -64,6 +66,27 @@ class ConversationForm(PairwiseForm):
         self.file_handler = logging.FileHandler("hit.log")
         self.file_handler.setFormatter(self.formatter)
         self.logger.addHandler(self.file_handler)
+    
+    def __init_user_data(self, mturk_worker_id: str) -> None:
+        self.user_temp[mturk_worker_id] = {
+            "situation_idx": 0,
+            "scenario_count": 0,
+        }
+        self.user_data[mturk_worker_id] = {
+            "mturk_worker_id": mturk_worker_id,
+            "result": {
+                "situation1": list(),
+                "situation2": list(),
+                "situation3": list(),
+                "freetalk": list(),
+                "last_answer": -1,          # -1 means None(=null)
+                "usability_answer": list(),
+            },
+        }
+        user_model = copy.deepcopy(self.model)
+        user_model.generate_model_1.reset()
+        user_model.generate_model_2.reset()
+        self.user_model[mturk_worker_id] = user_model
 
     def _create_form(self) -> gr.Blocks:
         with gr.Blocks(css="#chatbot") as form:
@@ -97,7 +120,7 @@ class ConversationForm(PairwiseForm):
                         visible=False
                     )
                     situation_description = gr.Markdown(
-                        self.__get_current_scenario(self.scenario_count),
+                        self.__get_current_scenario(None),
                         visible=False
                     )
                 chatbot = gr.Chatbot(
@@ -294,7 +317,7 @@ class ConversationForm(PairwiseForm):
                 queue=False
             ).then(
                 self.__process,
-                inputs=chatbot,
+                inputs=[chatbot, id_input],
                 outputs=chatbot,
                 queue=True
             ).then(
@@ -309,6 +332,7 @@ class ConversationForm(PairwiseForm):
                 queue=True,
             ).then(
                 self.__select_btn,
+                inputs=[id_input],
                 outputs=[btn_row, finish_button],
                 queue=False
             )
@@ -326,7 +350,7 @@ class ConversationForm(PairwiseForm):
                 queue=False
             ).then(
                 self.__process,
-                inputs=chatbot,
+                inputs=[chatbot, id_input],
                 outputs=chatbot,
                 queue=True
             ).then(
@@ -335,6 +359,7 @@ class ConversationForm(PairwiseForm):
                 queue=True,
             ).then(
                 self.__select_btn,
+                inputs=[id_input],
                 outputs=[btn_row, finish_button],
                 queue=False
             )
@@ -371,7 +396,8 @@ class ConversationForm(PairwiseForm):
                 outputs=[btn_row, finish_button],
                 queue=False
             ).then(
-                lambda: gr.update(value=self.__get_current_scenario(self.scenario_count)),
+                lambda worker_id: gr.update(value=self.__get_current_scenario(worker_id)),
+                inputs=[id_input],
                 outputs=[situation_description],
                 queue=True
             )
@@ -459,7 +485,14 @@ class ConversationForm(PairwiseForm):
         
         return form
 
-    def __get_current_scenario(self, scenario_count):
+    def __get_current_scenario(self, mturk_worker_id):
+        if mturk_worker_id:
+            scenario_count = self.user_temp[mturk_worker_id]['scenario_count']
+            situation_idx = self.user_temp[mturk_worker_id]['situation_idx']
+        else:
+            scenario_count = 0
+            situation_idx = 0
+        
         scenario_idx = 0
         if scenario_count == 0:
             scenario_idx = 0
@@ -468,12 +501,12 @@ class ConversationForm(PairwiseForm):
         else:
             scenario_idx = 2
         
-        if self.situation_idx <= 2:
+        if situation_idx <= 2:
             description = self.guidance["system_usage_instruction"].format(
                 "\n".join([f"Step {i+1}) {situation}"
                            if i != scenario_idx
                            else f"<span style=\"color: red; background-color: white;\">Step {i+1}) {situation}</span>"
-                           for i, situation in enumerate(self.situations[self.situation_idx])]))
+                           for i, situation in enumerate(self.situations[situation_idx])]))
             description = description.format(self.turns)
         else:
             description = "<span style=\"color: red; background-color: white;\">Engage in a free talk with the IA for at least 3 turns.</span>"
@@ -501,7 +534,8 @@ class ConversationForm(PairwiseForm):
     def __save_id(self, id_input, save_id_button, *args):
         if not id_input:
             return (id_input, save_id_button, ) + tuple(args) + (gr.update(visible=False), )
-        self.data["mturk_worker_id"] = id_input
+        # self.data[id_input]["mturk_worker_id"] = id_input
+        self.__init_user_data(id_input)
         return (gr.update(interactive=False), ) * 2 + (gr.update(visible=True), ) * (len(args) + 1)
     
     def __clear_audio(self, audio):
@@ -532,35 +566,35 @@ class ConversationForm(PairwiseForm):
         assistant_message['base_model'] = message1 if self.random_num == 0 else message2
         assistant_message['augmented_model'] = message2 if self.random_num == 0 else message1
         
-        self.scenario_count += 1
-        description = self.__get_current_scenario(self.scenario_count)
+        self.user_temp[id_input]['scenario_count'] += 1
+        description = self.__get_current_scenario(id_input)
         
         content = dict()
         content["mturk_worker_id"] = id_input
         content["user_speech"] = chatbot[-1][0]
         content["assistant_message"] = assistant_message
         content["answer"] = all_questions
-        content["situation_index"] = self.situation_idx
+        content["situation_index"] = self.user_temp[id_input]['situation_idx']
         self.logger.info(f"HIT: {str(content)}")
         
         del content["mturk_worker_id"]
         del content["situation_index"]
-        if self.situation_idx <= 2:
-            self.data["result"][f"situation{self.situation_idx + 1}"].append(content)
+        if self.user_temp[id_input]['situation_idx'] <= 2:
+            self.user_data[id_input]["result"][f"situation{self.user_temp[id_input]['situation_idx'] + 1}"].append(content)
         else:
-            self.data["result"]["freetalk"].append(content)
+            self.user_data[id_input]["result"]["freetalk"].append(content)
 
         return (gr.update(visible=False),) * 6 + (gr.update(value=description), gr.update(visible=True),) + (gr.update(value=None),) * len(args)
     
-    def __process(self, history):
+    def __process(self, history, id_input):
         input = history[-1][0]
 
         if isinstance(input, str):
-            response = self.model.fn(text_input=input)
+            response = self.user_model[id_input].fn(text_input=input)
         elif isinstance(input, tuple):
-            response = self.model.fn(audio_file=input[0])
+            response = self.user_model[id_input].fn(audio_file=input[0])
         else:
-            response = self.model.fn(
+            response = self.user_model[id_input].fn(
                 text_input=input,
                 forced_response="This type of input is not supported.",
             )
@@ -572,7 +606,7 @@ class ConversationForm(PairwiseForm):
         self.random_num = random.randrange(2)
         #speech_data = f"data:audio/wav;base64,{speech if self.random_num == 0 else speech2}"
         #output = f"[Model 1]<br/><audio controls autoplay src=\"{speech_data}\" type=\"audio/wav\"></audio>"
-        if self.situation_idx <= 2:
+        if self.user_temp[id_input]['situation_idx'] <= 2:
             output = "[Model 1]\n"
             output += message if self.random_num == 0 else message2
         
@@ -592,24 +626,25 @@ class ConversationForm(PairwiseForm):
     def __reset(self, id_input):
         content = dict()
         content['mturk_worker_id'] = id_input
-        if self.situation_idx <= 2:
-            content["situation_index"] = self.situation_idx
+        if self.user_temp[id_input]['situation_idx'] <= 2:
+            content["situation_index"] = self.user_temp[id_input]['situation_idx']
         content['message'] = "The conversation history has been reset."
-        self.scenario_count = 0
+        self.user_temp[id_input]['scenario_count'] = 0
         self.logger.info(f"HIT: {str(content)}")
-        if self.situation_idx <= 2:
-            self.data["result"][f"situation{self.situation_idx + 1}"].clear()
+        if self.user_temp[id_input]['situation_idx'] <= 2:
+            self.user_data[id_input]["result"][f"situation{self.user_temp[id_input]['situation_idx'] + 1}"].clear()
         else:
-            self.data["result"][f"freetalk"].clear()
+            self.user_data[id_input]["result"][f"freetalk"].clear()
 
-        self.model.generate_model_2.reset()
+        self.user_model[id_input].generate_model_1.reset()
+        self.user_model[id_input].generate_model_2.reset()
 
         return (gr.update(value=None),) * 10 + (gr.update(visible=False),) * 4
     
-    def __select_btn(self):
-        if self.scenario_count >= (self.turns + 1):
+    def __select_btn(self, id_input):
+        if self.user_temp[id_input]['scenario_count'] >= (self.turns + 1):
             return gr.update(visible=True), gr.update(visible=True)
-        elif self.situation_idx > 2 and self.scenario_count >= (self.turns - 1):
+        elif self.user_temp[id_input]['situation_idx'] > 2 and self.user_temp[id_input]['scenario_count'] >= (self.turns - 1):
             return gr.update(visible=True), gr.update(visible=True)
         return gr.update(visible=True), gr.update(visible=False)
     
@@ -649,26 +684,27 @@ class ConversationForm(PairwiseForm):
         content["user_speech"] = chatbot[-1][0]
         content["assistant_message"] = assistant_message
         content["answer"] = all_questions
-        content["situation_index"] = self.situation_idx
+        content["situation_index"] = self.user_temp[id_input]['situation_idx']
         self.logger.info(f"HIT: {str(content)}")
         
         del content["mturk_worker_id"]
         del content["situation_index"]
-        if self.situation_idx <= 2:
-            self.data["result"][f"situation{self.situation_idx + 1}"].append(content)
+        if self.user_temp[id_input]['situation_idx'] <= 2:
+            self.user_data[id_input]["result"][f"situation{self.user_temp[id_input]['situation_idx'] + 1}"].append(content)
         else:
-            self.data["result"]["freetalk"].append(content)
+            self.user_data[id_input]["result"]["freetalk"].append(content)
         
-        self.scenario_count = 0
-        self.situation_idx += 1
-        if self.situation_idx > 3:
+        self.user_temp[id_input]['scenario_count'] = 0
+        self.user_temp[id_input]['situation_idx'] += 1
+        if self.user_temp[id_input]['situation_idx'] > 3:
             return (gr.update(visible=False), ) * 12 \
                     + (gr.update(visible=True),) \
                     + (gr.update(visible=False),) * len(args)
         else:
-            self.model.generate_model_2.reset()
+            self.user_model[id_input].generate_model_1.reset()
+            self.user_model[id_input].generate_model_2.reset()
             
-            situation_msg = self.__get_current_scenario(self.scenario_count)
+            situation_msg = self.__get_current_scenario(id_input)
             return (gr.update(value=situation_msg), situation_title, gr.update(value=None),) \
                     + (gr.update(visible=False),) * 6 \
                     + (gr.update(visible=True),) \
@@ -690,19 +726,19 @@ class ConversationForm(PairwiseForm):
         content["mturk_worker_id"] = id_input
         if len(args) == 1:
             content["last_answer"] = args[0]
-            self.data["result"]["last_answer"] = args[0]
+            self.user_data[id_input]["result"]["last_answer"] = args[0]
         else:
             content["usability_answer"] = list(args)
-            self.data["result"]["usability_answer"] = list(args)
+            self.user_data[id_input]["result"]["usability_answer"] = list(args)
         self.logger.info(f"HIT: {str(content)}")
         
         os.makedirs(f"{self.data_path}", exist_ok=True)
         userid = id_input.replace("/","-")
         with open(f"{self.data_path}/user_{userid}_data.json", "w", encoding="utf-8") as file:
-            json.dump(self.data, file)
+            json.dump(self.user_data[id_input], file)
         
-        self.situation_idx = 0
-        self.scenario_count = 0
+        self.user_temp[id_input]['situation_idx'] = 0
+        self.user_temp[id_input]['scenario_count'] = 0
         
         if len(args) == 1:
             return (gr.update(visible=False),) * 2 \

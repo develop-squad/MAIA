@@ -20,11 +20,15 @@ class BasePrompter(Model):
         super().__init__()
 
         self.model_class = model_class
-        self.instantiate()
+        self.model_loaded = False
         self.fn = self.prompt
     
-    def instantiate(self) -> Model:
+    def reset(self) -> None:
+        self.__instantiate_model()
+    
+    def __instantiate_model(self) -> Model:
         self.model = self.model_class(context=True)
+        self.model_loaded = True
         return self.model
     
     def prompt(
@@ -46,11 +50,22 @@ class AugmentedPrompter(Model):
         super().__init__()
 
         self.model_class = model_class
-        self.instantiate()
-        self.reset()
+        self.model_loaded = False
         self.fn = self.prompt
     
-    def instantiate(self) -> Model:
+    def reset(self) -> None:
+        self.__instantiate_model()
+        self.config = PromptConfig()
+        self.templates = self._load_prompts("conversation/prompts/")
+        self.session = {
+            "history": [],
+            "history_summaries": [],
+            "prefix": None,
+            "suffix": None,
+        }
+        self.retriever = BiEncoderRetriever()
+    
+    def __instantiate_model(self) -> Model:
         self.model = self.model_class(context=False)
         self.role_key = "role"
 
@@ -61,18 +76,8 @@ class AugmentedPrompter(Model):
             )
             self.role_key = "author"
 
+        self.model_loaded = True
         return self.model
-    
-    def reset(self) -> None:
-        self.config = PromptConfig()
-        self.templates = self._load_prompts("conversation/prompts/")
-        self.session = {
-            "history": [],
-            "history_summaries": [],
-            "prefix": None,
-            "suffix": None,
-        }
-        self.retriever = BiEncoderRetriever()
     
     def prompt(
         self,
