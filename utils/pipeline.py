@@ -48,7 +48,9 @@ class PairwisePipeline(Pipeline):
 
         self.transcribe = transcribe_model.fn
         self.generate_1 = generate_1_wrapper
+        self.generate_1_name = generate_model_1.name
         self.generate_2 = generate_model_2.fn
+        self.generate_2_name = generate_model_2.name
         self.forced_response = forced_response
 
         self.setup_interface(
@@ -60,6 +62,12 @@ class PairwisePipeline(Pipeline):
                 *generate_model_2.outputs,
             ],
         )
+        
+    def set_wrapper(self, model: Model):
+        def generate_1_wrapper(*args, **kwargs):
+            return model.fn(*args, stop=["\n"], **kwargs)
+        
+        self.generate_1 = generate_1_wrapper
     
     def __call__(self, *args, **kwargs):
         transcript = self.transcribe(*args, **kwargs)

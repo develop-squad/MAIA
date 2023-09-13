@@ -10,6 +10,8 @@ class PaLM(Model):
         model: str = "models/chat-bison-001",
         context: bool = True,
     ):
+        super().__init__(name="palm")
+        
         self.api_key = api_key or os.getenv("GOOGLE_API_KEY", "")
         assert (
             self.api_key

@@ -14,8 +14,9 @@ class Prompter(Model):
     def __init__(
         self,
         model: Model,
+        name: str
     ) -> None:
-        super().__init__()
+        super().__init__(name)
 
         self.model = model
 

@@ -9,7 +9,7 @@ from .form import Form
 class LaunchConfig:
     title: str = "HI-MAIA"
     server_name: str = "0.0.0.0"
-    server_port: int = 36000
+    server_port: int = 443
     share_gradio: bool = False
     http: bool = False
 

@@ -2,10 +2,11 @@ import gradio as gr
 import typing
 
 class Model:
-    def __init__(self):
-        self.fn = None
+    def __init__(self, name):
         self.inputs = []
+        self.fn = None
         self.outputs = []
+        self.name = name
     
     def setup_interface(
         self,
