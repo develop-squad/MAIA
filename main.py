@@ -78,16 +78,24 @@ def main(**kwargs):
         batch_size=16,
     )
 
-    chatgpt = ChatGPT(
-        context=True
-    )
-    chatgpt_augmented = Prompter(ChatGPT(context=False),
-                                 name="chatgpt")
+    base_model_name = "palm"
+    if base_model_name == "chatgpt":
+        base_model = ChatGPT(context=True)
+        augmented_model = Prompter(
+            ChatGPT(context=False),
+            name="chatgpt"
+        )
+    else:
+        base_model = PaLM(context=True)
+        augmented_model = Prompter(
+            PaLM(context=False),
+            name="palm"
+        )
 
     pipeline = PairwisePipeline(
         transcribe_model=whisper,
-        generate_model_1=chatgpt,
-        generate_model_2=chatgpt_augmented,
+        generate_model_1=base_model,
+        generate_model_2=augmented_model,
     )
 
     config = LaunchConfig(**kwargs)
