@@ -4,7 +4,7 @@
 3. Once you've finished speaking, click the **Stop recording** button to complete the recording.
 4. Please wait for the IA to respond.
 5. Evaluate all ten items for [Model 1] and [Model 2].
-6. Once you've evaluated everything, click the **x** button above the recorded voice and repeat from step 2 to complete the given situation.
+6. Once you've evaluated everything, **Continue this conversation** 버튼을 클릭하고 잠시 기다린 뒤, repeat from step 2 to complete the given situation.
 7. Once you've completed all the conversations for the given situation, click the **Finish this conversation** button.
 8. The following situation will be provided. Please repeat steps 2 to 7.
 9. After completing all three situations and clicking the **Finish this conversation** button, proceed with the final evaluation and click the **Submit** button.
