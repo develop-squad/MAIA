@@ -467,7 +467,7 @@ class ConversationForm(PairwiseForm):
                            for i, situation in enumerate(self.situations[self.situation_idx])]))
             description = description.format(self.turns)
         else:
-            description = "Engage in a free talk with the IA for at least 3 turns."
+            description = "<span style=\"color: red; background-color: white;\">Engage in a free talk with the IA for at least 3 turns.</span>"
         return description
 
     def __save_irb_agreement(self, irb_agreement, irb_button, irb_msg):
