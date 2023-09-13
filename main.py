@@ -88,7 +88,10 @@ def main(**kwargs):
     else:
         base_model = PaLM(context=True)
         augmented_model = Prompter(
-            PaLM(context=False),
+            PaLM(
+                model="models/text-bison-001",
+                context=False
+            ),
             name="palm"
         )
 
