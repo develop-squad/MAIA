@@ -608,6 +608,8 @@ class ConversationForm(PairwiseForm):
     def __select_btn(self):
         if self.scenario_count >= (self.turns + 1):
             return gr.update(visible=True), gr.update(visible=True)
+        elif self.situation_idx > 2 and self.scenario_count >= (self.turns - 1):
+            return gr.update(visible=True), gr.update(visible=True)
         return gr.update(visible=True), gr.update(visible=False)
     
     def __finish_conversation(self,
