@@ -26,7 +26,7 @@ class PaLM(Model):
     def prompt(
         self,
         input,
-        temperature=0.25,
+        temperature=0.7,
         top_p=0.95,
         top_k=40,
         stop=[],

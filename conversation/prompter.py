@@ -57,17 +57,18 @@ class Prompter(Model):
         response = self.generate(conclusion, query)
         print("* Generation:", response)
 
-        self.session["history"].extend([
+        extended_history = [
             {"role": "User", "content": input},
             {"role": "Assistant", "content": response},
-        ])
+        ]
 
         # Memorization Layer
         ## TODO: Conversation 결과를 제공한 후 Memorize하여 응답 시간 단축
         summaries = self.summarize(self.session["history"])
         print(" ** Summarization **\n", summaries)
 
-        self.session["history_summary"] = summaries
+        self.session["history_summaries"].extend(summaries)
+        self.session["history"].extend(extended_history)
 
         return response
     
@@ -103,7 +104,7 @@ class Prompter(Model):
         print("* Completion:", completion)
 
         knowledge = self._parse_completion(completion, "Knowledge")
-        query = self._parse_completion(completion, "Query")
+        query = self._parse_completion(completion, "Query")[0]
     
         return knowledge, query
     
@@ -111,14 +112,28 @@ class Prompter(Model):
         self,
         query: str,
     ) -> list[str]:
-        if len(self.session["history_summaries"]) == 0:
+        prompt = self.templates["retriever"].format(
+            question=query,
+        )
+        print("* Prompt:", prompt)
+        completion = "".join(self.model.fn(
+            input=prompt,
+            temperature=0,
+        ))
+        print("* Completion:", completion)
+
+        if completion.strip().lower() == "I can't answer.".strip().lower():
             return []
+        elif len(self.session["history_summaries"]) == 0:
+            return [completion]
 
         retrieval = self.retriever.retrieve_top_summaries(
             query, self.session["history_summaries"],
         )
 
-        return retrieval
+        if completion.strip().lower() == "I can't answer.".strip().lower():
+            return retrieval
+        return [completion] + retrieval
     
     def reasoning(
         self,
@@ -126,7 +141,7 @@ class Prompter(Model):
         query: str,
     ) -> str:
         prompt = self.templates["reasoner"].format(
-            knowledge=knowledge,
+            knowledge="\n".join(f"({i+1}) {item}" for i, item in enumerate(knowledge)),
             query=query,
         )
         print("* Prompt:", prompt)
@@ -136,7 +151,8 @@ class Prompter(Model):
         ))
         print("* Completion:", completion)
 
-        conclusion = self._parse_completion(completion, "Conclusion")
+        #conclusion = self._parse_completion(completion, "Conclusion")[0]
+        conclusion = completion
 
         if len(conclusion) == 0:
             conclusion = ""

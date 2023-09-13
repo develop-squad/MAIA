@@ -27,7 +27,7 @@ class ChatGPT(Model):
     def prompt(
         self,
         input,
-        temperature=1.0, # 0~2.0
+        temperature=0.7, # 0~2.0
         top_p=1.0,
         frequency_penalty=0, # -2.0~2.0
         presence_penalty=0, # -2.0~2.0

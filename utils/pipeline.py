@@ -43,8 +43,11 @@ class PairwisePipeline(Pipeline):
         generate_model_2: Model,
         forced_response: str = "",
     ):
+        def generate_1_wrapper(*args, **kwargs):
+            return generate_model_1.fn(*args, stop=["\n"], **kwargs)
+
         self.transcribe = transcribe_model.fn
-        self.generate_1 = generate_model_1.fn
+        self.generate_1 = generate_1_wrapper
         self.generate_2 = generate_model_2.fn
         self.forced_response = forced_response
 
