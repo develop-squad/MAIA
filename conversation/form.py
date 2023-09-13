@@ -463,9 +463,7 @@ class ConversationForm(PairwiseForm):
                        if i != scenario_idx
                        else f"<span style=\"color: red; background-color: white;\">Step {i+1}) {situation}</span>"
                        for i, situation in enumerate(self.situations[self.situation_idx])]))
-        print(description)
         description = description.format(self.turns)
-        print(description)
         return description
 
     def __save_irb_agreement(self, irb_agreement, irb_button, irb_msg):
