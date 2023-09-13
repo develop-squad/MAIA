@@ -604,7 +604,6 @@ class ConversationForm(PairwiseForm):
 
             palm = PaLM(context=True)
             self.model.set_wrapper(palm)
-            self.model.generate_1 = self.model.generate_1_wrapper
             self.model.generate_2 = Prompter(PaLM(context=False),
                                              name="palm").prompt
 
@@ -685,7 +684,6 @@ class ConversationForm(PairwiseForm):
 
                 palm = PaLM(context=True)
                 self.model.set_wrapper(palm)
-                self.model.generate_1 = self.model.generate_1_wrapper
                 self.model.generate_2 = Prompter(PaLM(context=False),
                                                  name="palm").prompt
             
