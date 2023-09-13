@@ -519,17 +519,17 @@ class ConversationForm(PairwiseForm):
         message1 = message1.replace("[Model 1]","").strip()
         message2 = message2.strip()
         
-        bot_message = dict()
-        bot_message['base_model'] = message1 if self.random_num == 0 else message2
-        bot_message['augmented_model'] = message2 if self.random_num == 0 else message1
+        assistant_message = dict()
+        assistant_message['base_model'] = message1 if self.random_num == 0 else message2
+        assistant_message['augmented_model'] = message2 if self.random_num == 0 else message1
         
         self.scenario_count += 1
         description = self.__get_current_scenario(self.scenario_count)
         
         content = dict()
         content["mturk_worker_id"] = id_input
-        content["speech"] = chatbot[-1][0]
-        content["bot_message"] = bot_message
+        content["user_speech"] = chatbot[-1][0]
+        content["assistant_message"] = assistant_message
         content["answer"] = all_questions
         content["situation_index"] = self.situation_idx
         self.logger.info(f"HIT: {str(content)}")
@@ -637,14 +637,14 @@ class ConversationForm(PairwiseForm):
         message1 = message1.replace("[Model 1]","").strip()
         message2 = message2.strip()
         
-        bot_message = dict()
-        bot_message['base_model'] = message1 if self.random_num == 0 else message2
-        bot_message['augmented_model'] = message2 if self.random_num == 0 else message1
+        assistant_message = dict()
+        assistant_message['base_model'] = message1 if self.random_num == 0 else message2
+        assistant_message['augmented_model'] = message2 if self.random_num == 0 else message1
         
         content = dict()
         content["mturk_worker_id"] = id_input
-        content["speech"] = chatbot[-1][0]
-        content["bot_message"] = bot_message
+        content["user_speech"] = chatbot[-1][0]
+        content["assistant_message"] = assistant_message
         content["answer"] = all_questions
         content["situation_index"] = self.situation_idx
         self.logger.info(f"HIT: {str(content)}")
