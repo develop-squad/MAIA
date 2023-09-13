@@ -11,7 +11,7 @@ class ConversationForm(PairwiseForm):
 
         # Excluded 1 turn before and after
         # minimum = 1
-        self.turns = 3
+        self.turns = 1
 
         self.scales = {
             "likert": [
@@ -41,6 +41,7 @@ class ConversationForm(PairwiseForm):
                 "situation1": list(),
                 "situation2": list(),
                 "situation3": list(),
+                "freetalk": list(),
                 "last_answer": -1,          # -1 means None(=null)
                 "usability_answer": list()
             }
@@ -458,12 +459,15 @@ class ConversationForm(PairwiseForm):
         else:
             scenario_idx = 2
         
-        description = self.guidance["system_usage_instruction"].format(
-            "\n".join([f"Step {i+1}) {situation}"
-                       if i != scenario_idx
-                       else f"<span style=\"color: red; background-color: white;\">Step {i+1}) {situation}</span>"
-                       for i, situation in enumerate(self.situations[self.situation_idx])]))
-        description = description.format(self.turns)
+        if self.situation_idx <= 2:
+            description = self.guidance["system_usage_instruction"].format(
+                "\n".join([f"Step {i+1}) {situation}"
+                           if i != scenario_idx
+                           else f"<span style=\"color: red; background-color: white;\">Step {i+1}) {situation}</span>"
+                           for i, situation in enumerate(self.situations[self.situation_idx])]))
+            description = description.format(self.turns)
+        else:
+            description = "Engage in a free talk with the IA for at least 3 turns."
         return description
 
     def __save_irb_agreement(self, irb_agreement, irb_button, irb_msg):
@@ -532,7 +536,10 @@ class ConversationForm(PairwiseForm):
         
         del content["mturk_worker_id"]
         del content["situation_index"]
-        self.data["result"][f"situation{self.situation_idx + 1}"].append(content)
+        if self.situation_idx <= 2:
+            self.data["result"][f"situation{self.situation_idx + 1}"].append(content)
+        else:
+            self.data["result"]["freetalk"].append(content)
 
         return (gr.update(visible=False),) * 6 + (gr.update(value=description), gr.update(visible=True),) + (gr.update(value=None),) * len(args)
     
@@ -572,11 +579,15 @@ class ConversationForm(PairwiseForm):
     def __reset(self, id_input):
         content = dict()
         content['mturk_worker_id'] = id_input
-        content["situation_index"] = self.situation_idx
+        if self.situation_idx <= 2:
+            content["situation_index"] = self.situation_idx
         content['message'] = "The conversation history has been reset."
         self.scenario_count = 0
         self.logger.info(f"HIT: {str(content)}")
-        self.data["result"][f"situation{self.situation_idx + 1}"].clear()
+        if self.situation_idx <= 2:
+            self.data["result"][f"situation{self.situation_idx + 1}"].clear()
+        else:
+            self.data["result"][f"freetalk"].clear()
 
         from conversation.prompter import Prompter
         from models.chatgpt.core import ChatGPT
@@ -611,6 +622,8 @@ class ConversationForm(PairwiseForm):
                     + (gr.update(visible=False),) * 1 \
                     + args
         
+        # situation 필요함
+        
         # if self.random_num == 0 1=base, 2=augmented
         # else 1=augmented, 2=base
         if self.random_num == 0:
@@ -638,11 +651,14 @@ class ConversationForm(PairwiseForm):
         
         del content["mturk_worker_id"]
         del content["situation_index"]
-        self.data["result"][f"situation{self.situation_idx + 1}"].append(content)
+        if self.situation_idx <= 2:
+            self.data["result"][f"situation{self.situation_idx + 1}"].append(content)
+        else:
+            self.data["result"]["freetalk"].append(content)
         
         self.scenario_count = 0
         self.situation_idx += 1
-        if self.situation_idx > 2:
+        if self.situation_idx > 3:
             return (gr.update(visible=False), ) * 12 \
                     + (gr.update(visible=True),) \
                     + (gr.update(visible=False),) * len(args)
