@@ -5,25 +5,65 @@ import json
 import typing
 from dataclasses import dataclass
 from utils.model import Model
+from models.palm.core import PaLM
 from conversation.retriever import BiEncoderRetriever
 
 @dataclass
 class PromptConfig:
     remove_cot: bool = False
 
-class Prompter(Model):
+class BasePrompter(Model):
     def __init__(
         self,
-        model: Model,
-        name: str
+        model_class: typing.Type[Model],
     ) -> None:
-        super().__init__(name)
+        super().__init__()
 
-        self.model = model
+        self.model_class = model_class
+        self.instantiate()
+        self.fn = self.prompt
+    
+    def instantiate(self) -> Model:
+        self.model = self.model_class(context=True)
+        return self.model
+    
+    def prompt(
+        self,
+        input: str,
+    ) -> str:
+        completion = "".join(self.model.fn(
+            input=input,
+            temperature=0.7,
+            stop=["\n"],
+        ))
+        return completion
+
+class AugmentedPrompter(Model):
+    def __init__(
+        self,
+        model_class: typing.Type[Model],
+    ) -> None:
+        super().__init__()
+
+        self.model_class = model_class
+        self.instantiate()
+        self.reset()
+        self.fn = self.prompt
+    
+    def instantiate(self) -> Model:
+        self.model = self.model_class(context=False)
         self.role_key = "role"
-        if name == "palm":
+
+        if isinstance(self.model, PaLM):
+            self.model = self.model_class(
+                model="models/text-bison-001",
+                context=False,
+            )
             self.role_key = "author"
 
+        return self.model
+    
+    def reset(self) -> None:
         self.config = PromptConfig()
         self.templates = self._load_prompts("conversation/prompts/")
         self.session = {
@@ -32,13 +72,11 @@ class Prompter(Model):
             "prefix": None,
             "suffix": None,
         }
-
         self.retriever = BiEncoderRetriever()
-        self.fn = self.prompt
     
     def prompt(
         self,
-        input:str,
+        input: str,
     ) -> str:
         attempts = 0
         while attempts < 3:
@@ -80,7 +118,7 @@ class Prompter(Model):
                     time.sleep(1)
                 attempts += 1
         return "Sorry, there was an error processing your request. Please try again, and if the error persists, reset the conversation and start over."
-    
+
     def clarify(
         self,
         input: str,

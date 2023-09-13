@@ -1,5 +1,5 @@
 import gradio as gr
-from .pipeline import Pipeline
+from .pipeline import Pipeline, PairwisePipeline
 
 class Form:
     def __init__(
@@ -30,7 +30,7 @@ class Form:
 class PairwiseForm(Form):
     def __init__(
         self,
-        model: Pipeline,
+        model: PairwisePipeline,
         title: str,
     ):
         self.model = model

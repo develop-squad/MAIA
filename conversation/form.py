@@ -5,10 +5,14 @@ import json
 import os
 import os.path as osp
 from utils.form import PairwiseForm
+from utils.pipeline import PairwisePipeline
 
 class ConversationForm(PairwiseForm):
-    def __init__(self, model, title):
-
+    def __init__(
+        self,
+        model: PairwisePipeline,
+        title: str,
+    ):
         # Excluded 1 turn before and after
         # minimum = 1
         self.turns = 3
@@ -597,24 +601,8 @@ class ConversationForm(PairwiseForm):
             self.data["result"][f"situation{self.situation_idx + 1}"].clear()
         else:
             self.data["result"][f"freetalk"].clear()
-    
-        from conversation.prompter import Prompter
 
-        if self.model.generate_1_name == "chatgpt":
-            from models.chatgpt.core import ChatGPT
-
-            chatgpt = ChatGPT(context=True)
-            self.model.set_wrapper(chatgpt)
-            self.model.generate_2 = Prompter(ChatGPT(context=False),
-                                             name="chatgpt").prompt
-
-        elif self.model.generate_1_name == "palm":
-            from models.palm.core import PaLM
-
-            palm = PaLM(context=True)
-            self.model.set_wrapper(palm)
-            self.model.generate_2 = Prompter(PaLM(context=False),
-                                             name="palm").prompt
+        self.model.generate_model_2.reset()
 
         return (gr.update(value=None),) * 10 + (gr.update(visible=False),) * 4
     
@@ -677,24 +665,8 @@ class ConversationForm(PairwiseForm):
             return (gr.update(visible=False), ) * 12 \
                     + (gr.update(visible=True),) \
                     + (gr.update(visible=False),) * len(args)
-        else:            
-            from conversation.prompter import Prompter
-
-            if self.model.generate_1_name == "chatgpt":
-                from models.chatgpt.core import ChatGPT
-
-                chatgpt = ChatGPT(context=True)
-                self.model.set_wrapper(chatgpt)
-                self.model.generate_2 = Prompter(ChatGPT(context=False),
-                                             name="chatgpt").prompt
-
-            elif self.model.generate_1_name == "palm":
-                from models.palm.core import PaLM
-
-                palm = PaLM(context=True)
-                self.model.set_wrapper(palm)
-                self.model.generate_2 = Prompter(PaLM(context=False),
-                                                 name="palm").prompt
+        else:
+            self.model.generate_model_2.reset()
             
             situation_msg = self.__get_current_scenario(self.scenario_count)
             return (gr.update(value=situation_msg), situation_title, gr.update(value=None),) \

@@ -11,7 +11,7 @@ class ChatGPT(Model):
         model: str = "gpt-3.5-turbo",
         context: bool = True,
     ):
-        super().__init__(name="chatgpt")
+        super().__init__()
 
         openai.api_key = api_key or os.getenv("OPENAI_API_KEY", "")
         assert (

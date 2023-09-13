@@ -1,4 +1,5 @@
 from utils.model import Model
+from conversation.prompter import BasePrompter, AugmentedPrompter
 
 class Pipeline(Model):
     def __init__(
@@ -39,18 +40,18 @@ class PairwisePipeline(Pipeline):
     def __init__(
         self,
         transcribe_model: Model,
-        generate_model_1: Model,
-        generate_model_2: Model,
+        generate_model_1: BasePrompter,
+        generate_model_2: AugmentedPrompter,
         forced_response: str = "",
     ):
-        def generate_1_wrapper(*args, **kwargs):
-            return generate_model_1.fn(*args, stop=["\n"], **kwargs)
+        self.transcribe_model = transcribe_model
+        self.generate_model_1 = generate_model_1
+        self.generate_model_2 = generate_model_2
 
         self.transcribe = transcribe_model.fn
-        self.generate_1 = generate_1_wrapper
-        self.generate_1_name = generate_model_1.name
+        self.generate_1 = generate_model_1.fn
         self.generate_2 = generate_model_2.fn
-        self.generate_2_name = generate_model_2.name
+        
         self.forced_response = forced_response
 
         self.setup_interface(
@@ -62,12 +63,6 @@ class PairwisePipeline(Pipeline):
                 *generate_model_2.outputs,
             ],
         )
-        
-    def set_wrapper(self, model: Model):
-        def generate_1_wrapper(*args, **kwargs):
-            return model.fn(*args, stop=["\n"], **kwargs)
-        
-        self.generate_1 = generate_1_wrapper
     
     def __call__(self, *args, **kwargs):
         transcript = self.transcribe(*args, **kwargs)

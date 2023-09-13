@@ -68,7 +68,7 @@ def main(**kwargs):
     from models.whisperx.core import WhisperX
     from models.chatgpt.core import ChatGPT
     from models.palm.core import PaLM
-    from conversation.prompter import Prompter
+    from conversation.prompter import BasePrompter, AugmentedPrompter
     from conversation.form import ConversationForm
     
     whisper = WhisperX(
@@ -78,22 +78,9 @@ def main(**kwargs):
         batch_size=16,
     )
 
-    base_model_name = "chatgpt"
-    if base_model_name == "chatgpt":
-        base_model = ChatGPT(context=True)
-        augmented_model = Prompter(
-            ChatGPT(context=False),
-            name="chatgpt"
-        )
-    else:
-        base_model = PaLM(context=True)
-        augmented_model = Prompter(
-            PaLM(
-                model="models/text-bison-001",
-                context=False
-            ),
-            name="palm"
-        )
+    model_class = ChatGPT
+    base_model = BasePrompter(model_class)
+    augmented_model = AugmentedPrompter(model_class)
 
     pipeline = PairwisePipeline(
         transcribe_model=whisper,

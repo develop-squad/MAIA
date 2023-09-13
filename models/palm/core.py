@@ -10,7 +10,7 @@ class PaLM(Model):
         model: str = "models/chat-bison-001",
         context: bool = True,
     ):
-        super().__init__(name="palm")
+        super().__init__()
         
         self.api_key = api_key or os.getenv("GOOGLE_API_KEY", "")
         assert (
@@ -54,6 +54,7 @@ class PaLM(Model):
                 top_p=top_p,
                 top_k=top_k,
             )
+            print(chat)
             author = chat.messages[-1]['author']
             reply = chat.messages[-1]['content']
         else:
