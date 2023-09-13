@@ -1,5 +1,6 @@
 import os
 import os.path as osp
+import time
 import json
 import typing
 from dataclasses import dataclass
@@ -41,37 +42,46 @@ class Prompter(Model):
         self,
         input:str,
     ) -> str:
-        # Conversation Layer
-        print("\n ** Extractor **")
-        knowledge, query = self.extract(input)
-        print("* Knowledge, Question:", (knowledge, query))
+        attempts = 0
+        while attempts < 3:
+            try:
+                # Conversation Layer
+                print("\n ** Extractor **")
+                knowledge, query = self.extract(input)
+                print("* Knowledge, Question:", (knowledge, query))
 
-        print("\n ** Retriever **")
-        retrieval = self.retrieve(query)
-        print("* Retrieval:", retrieval)
+                print("\n ** Retriever **")
+                retrieval = self.retrieve(query)
+                print("* Retrieval:", retrieval)
 
-        print("\n ** Reasoning **")
-        conclusion = self.reasoning(knowledge + retrieval, query)
-        print("* Conclusion:", conclusion)
+                print("\n ** Reasoning **")
+                conclusion = self.reasoning(knowledge + retrieval, query)
+                print("* Conclusion:", conclusion)
 
-        print("\n ** Generator **")
-        response = self.generate(conclusion, query)
-        print("* Generation:", response)
+                print("\n ** Generator **")
+                response = self.generate(conclusion, query)
+                print("* Generation:", response)
 
-        extended_history = [
-            {"role": "User", "content": input},
-            {"role": "Assistant", "content": response},
-        ]
+                extended_history = [
+                    {"role": "User", "content": input},
+                    {"role": "Assistant", "content": response},
+                ]
 
-        # Memorization Layer
-        ## TODO: Conversation 결과를 제공한 후 Memorize하여 응답 시간 단축
-        summaries = self.summarize(self.session["history"])
-        print(" ** Summarization **\n", summaries)
+                # Memorization Layer
+                ## TODO: Conversation 결과를 제공한 후 Memorize하여 응답 시간 단축
+                summaries = self.summarize(self.session["history"])
+                print(" ** Summarization **\n", summaries)
 
-        self.session["history_summaries"].extend(summaries)
-        self.session["history"].extend(extended_history)
+                self.session["history_summaries"].extend(summaries)
+                self.session["history"].extend(extended_history)
 
-        return response
+                return response
+            except Exception as e:
+                print(f"Attempt {attempts+1} failed with error: {e}")
+                if attempts < 2:
+                    time.sleep(0.5)
+                attempts += 1
+        return "Sorry, there was an error processing your request. Please try again, and if the error persists, reset the conversation and start over."
     
     def clarify(
         self,
