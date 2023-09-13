@@ -39,12 +39,12 @@ class PaLM(Model):
             "content": input,
         }
 
-        if history:
-            self.messages = history.append(message)
+        if type(history) is list:
+            self.messages = history + [message]
         elif self.context:
             self.messages.append(message)
         else:
-            self.messages = message
+            self.messages = [message]
 
         if self.model_name == "models/chat-bison-001":
             chat = palm.chat(

@@ -132,7 +132,7 @@ class Prompter(Model):
         ))
         print("* Completion:", completion)
 
-        if completion.strip().lower() == "I can't answer.".strip().lower():
+        if "i can't answer" in completion.strip().lower() or "i cannot answer" in completion.strip().lower():
             return []
         elif len(self.session["history_summaries"]) == 0:
             return [completion]

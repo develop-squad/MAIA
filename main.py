@@ -78,7 +78,7 @@ def main(**kwargs):
         batch_size=16,
     )
 
-    base_model_name = "palm"
+    base_model_name = "chatgpt"
     if base_model_name == "chatgpt":
         base_model = ChatGPT(context=True)
         augmented_model = Prompter(

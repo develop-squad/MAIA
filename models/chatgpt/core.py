@@ -39,8 +39,8 @@ class ChatGPT(Model):
             "content": input,
         }
 
-        if history:
-            self.messages = history.append(message)
+        if type(history) is list:
+            self.messages = history + [message]
         elif self.context:
             self.messages.append(message)
         else:
