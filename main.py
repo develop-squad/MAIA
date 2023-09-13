@@ -67,6 +67,7 @@ def run_googletts(google_tts_api_key: str = "", **kwargs):
 def main(**kwargs):
     from models.whisperx.core import WhisperX
     from models.chatgpt.core import ChatGPT
+    from models.palm.core import PaLM
     from conversation.prompter import Prompter
     from conversation.form import ConversationForm
     
