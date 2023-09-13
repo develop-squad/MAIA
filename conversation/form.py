@@ -230,11 +230,7 @@ class ConversationForm(PairwiseForm):
                 with gr.Column(visible=True) as usability_message_ui:
                     usability_message = gr.Markdown("### Please use the \"System\" first.")
                 with gr.Column(visible=False) as usability_row:
-                    gr.Markdown('''
-                                ## Free talking의 사용성을 평가해주세요.
-                                조금 전 Free talking은 즐거우셨나요? Free talking에 대하여 다음의 10가지 문항을 평가해주세요.
-                                * 아래의 'system'은 Free talking 했던 시스템을 의미합니다.
-                                ''')
+                    gr.Markdown("## Please evaluate the usability of the free talk system you used last.")
                     usability_question1 = gr.Radio(
                         choices=self.scales["likert"],
                         label="I think that I would like to use this system frequently.",
