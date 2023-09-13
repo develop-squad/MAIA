@@ -49,7 +49,7 @@ class ConversationForm(PairwiseForm):
         self.data_path = "results"
         self.text_input_hint="If the microphone malfunctions, use text input."
         self.evaluation_check_msg = "Please complete all survey questions."
-        self.all_finish_msg = "### 모두 끝났습니다. 참여해주셔서 감사합니다."
+        self.all_finish_msg = "### All tasks have been finished. Thank you for your participation."
 
         super().__init__(model=model, title=title)
         
