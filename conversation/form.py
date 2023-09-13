@@ -563,15 +563,19 @@ class ConversationForm(PairwiseForm):
         self.random_num = random.randrange(2)
         #speech_data = f"data:audio/wav;base64,{speech if self.random_num == 0 else speech2}"
         #output = f"[Model 1]<br/><audio controls autoplay src=\"{speech_data}\" type=\"audio/wav\"></audio>"
-        output = "[Model 1]\n"
-        output += message if self.random_num == 0 else message2
+        if self.situation_idx <= 2:
+            output = "[Model 1]\n"
+            output += message if self.random_num == 0 else message2
         
-        #speech_data = f"data:audio/wav;base64,{speech2 if self.random_num == 0 else speech}"
-        output += f"\n\n[Model 2]\n" #<br/><audio controls src=\"{speech_data}\" type=\"audio/wav\"></audio>"
-        output += message2 if self.random_num == 0 else message
-        
-        print(f"- Assistant 1: {message if self.random_num == 0 else message2}")
-        print(f"- Assistant 2: {message2 if self.random_num == 0 else message}")
+            #speech_data = f"data:audio/wav;base64,{speech2 if self.random_num == 0 else speech}"
+            output += f"\n\n[Model 2]\n" #<br/><audio controls src=\"{speech_data}\" type=\"audio/wav\"></audio>"
+            output += message2 if self.random_num == 0 else message
+
+            print(f"- Assistant 1: {message if self.random_num == 0 else message2}")
+            print(f"- Assistant 2: {message2 if self.random_num == 0 else message}")
+        else:
+            output = message2
+            print(f"- Our Assistant: {message2}")
 
         history[-1] = (transcript, output)
         return history
