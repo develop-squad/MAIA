@@ -583,16 +583,16 @@ class ConversationForm(PairwiseForm):
         from conversation.prompter import Prompter
         from models.chatgpt.core import ChatGPT
             
-        chatgpt = ChatGPT(context=False)
+        chatgpt = ChatGPT(context=True)
         if type(self.model.generate_1) is type(chatgpt.prompt):
             self.model.generate_1 = chatgpt.prompt
-            self.model.generate_2 = Prompter(chatgpt).prompt
+            self.model.generate_2 = Prompter(ChatGPT(context=False)).prompt
         else:
             from models.palm.core import PaLM
-            palm = PaLM(context=False)
+            palm = PaLM(context=True)
             if type(self.model.generate_1) is type(palm.prompt):
                 self.model.generate_1 = palm.prompt
-                self.model.generate_2 = Prompter(palm).prompt
+                self.model.generate_2 = Prompter(PaLM(context=False)).prompt
         
         return (gr.update(value=None),) * 10 + (gr.update(visible=False),) * 4
     
@@ -652,16 +652,16 @@ class ConversationForm(PairwiseForm):
             from conversation.prompter import Prompter
             from models.chatgpt.core import ChatGPT
             
-            chatgpt = ChatGPT(context=False)
+            chatgpt = ChatGPT(context=True)
             if type(self.model.generate_1) is type(chatgpt.prompt):
                 self.model.generate_1 = chatgpt.prompt
-                self.model.generate_2 = Prompter(chatgpt).prompt
+                self.model.generate_2 = Prompter(ChatGPT(context=False)).prompt
             else:
                 from models.palm.core import PaLM
-                palm = PaLM(context=False)
+                palm = PaLM(context=True)
                 if type(self.model.generate_1) is type(palm.prompt):
                     self.model.generate_1 = palm.prompt
-                    self.model.generate_2 = Prompter(palm).prompt
+                    self.model.generate_2 = Prompter(PaLM(context=False)).prompt
             
             situation_msg = self.__get_current_scenario(self.scenario_count)
             return (gr.update(value=situation_msg), situation_title, gr.update(value=None),) \

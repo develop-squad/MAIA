@@ -78,9 +78,9 @@ def main(**kwargs):
     )
 
     chatgpt = ChatGPT(
-        context=False,
+        context=True
     )
-    chatgpt_augmented = Prompter(chatgpt)
+    chatgpt_augmented = Prompter(ChatGPT(context=False))
 
     pipeline = PairwisePipeline(
         transcribe_model=whisper,
