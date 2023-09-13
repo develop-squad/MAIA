@@ -706,7 +706,8 @@ class ConversationForm(PairwiseForm):
         self.logger.info(f"HIT: {str(content)}")
         
         os.makedirs(f"{self.data_path}", exist_ok=True)
-        with open(f"{self.data_path}/user_{id_input}_data.json", "w", encoding="utf-8") as file:
+        userid = id_input.replace("/","-")
+        with open(f"{self.data_path}/user_{userid}_data.json", "w", encoding="utf-8") as file:
             json.dump(self.data, file)
         
         self.situation_idx = 0
