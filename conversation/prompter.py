@@ -20,14 +20,12 @@ class Prompter(Model):
         super().__init__(name)
 
         self.model = model
+        self.role_key = "role"
+        if name == "palm":
+            self.role_key = "author"
 
         self.config = PromptConfig()
         self.templates = self._load_prompts("conversation/prompts/")
-        self.responses = {
-            "clarifier": None,
-            "retrieval": None,
-            "summerizer": None,
-        }
         self.session = {
             "history": [],
             "history_summaries": [],
@@ -63,8 +61,8 @@ class Prompter(Model):
                 print("* Generation:", response)
 
                 extended_history = [
-                    {"role": "User", "content": input},
-                    {"role": "Assistant", "content": response},
+                    {self.role_key: "user", "content": input},
+                    {self.role_key: "assistant", "content": response},
                 ]
 
                 # Memorization Layer
@@ -130,6 +128,7 @@ class Prompter(Model):
         completion = "".join(self.model.fn(
             input=prompt,
             temperature=0,
+            history=self.session["history"],
         ))
         print("* Completion:", completion)
 
@@ -142,7 +141,7 @@ class Prompter(Model):
             query, self.session["history_summaries"],
         )
 
-        if completion.strip().lower() == "I can't answer.".strip().lower():
+        if "i can't answer" in completion.strip().lower() or "i cannot answer" in completion.strip().lower():
             return retrieval
         return [completion] + retrieval
     
@@ -195,7 +194,7 @@ class Prompter(Model):
         self,
         history: list[dict[str, str]],
     ) -> list[str]:
-        dialogue = "\n".join(f"{item['role']}: {item['content']}" for item in history)
+        dialogue = "\n".join(f"{item[self.role_key]}: {item['content']}" for item in history)
 
         prompt = self.templates["summarizer"].format(
             dialogue=dialogue,

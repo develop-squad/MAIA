@@ -32,13 +32,16 @@ class PaLM(Model):
         top_p=0.95,
         top_k=40,
         stop=[],
+        history=None,
     ):
         message = {
             "author": "user",
             "content": input,
         }
 
-        if self.context:
+        if history:
+            self.messages = history.append(message)
+        elif self.context:
             self.messages.append(message)
         else:
             self.messages = message

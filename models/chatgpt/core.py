@@ -32,13 +32,16 @@ class ChatGPT(Model):
         frequency_penalty=0, # -2.0~2.0
         presence_penalty=0, # -2.0~2.0
         stop=[], # up to 4 sequences
+        history=None,
     ):
         message = {
             "role": "user",
             "content": input,
         }
 
-        if self.context:
+        if history:
+            self.messages = history.append(message)
+        elif self.context:
             self.messages.append(message)
         else:
             self.messages = [message]
