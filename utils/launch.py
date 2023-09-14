@@ -7,7 +7,7 @@ from .form import Form
 
 @dataclass
 class LaunchConfig:
-    title: str = "MAIA"
+    title: str = "HI-MAIA"
     server_name: str = "0.0.0.0"
     server_port: int = 443
     share_gradio: bool = False

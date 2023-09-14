@@ -1,76 +1,129 @@
 import os
 import os.path as osp
+import time
 import json
 import typing
 from dataclasses import dataclass
 from utils.model import Model
+from models.palm.core import PaLM
 from conversation.retriever import BiEncoderRetriever
 
 @dataclass
 class PromptConfig:
     remove_cot: bool = False
 
-class Prompter(Model):
+class BasePrompter(Model):
     def __init__(
         self,
-        model: Model,
+        model_class: typing.Type[Model],
     ) -> None:
         super().__init__()
 
-        self.model = model
+        self.model_class = model_class
+        self.model_loaded = False
+        self.fn = self.prompt
+    
+    def reset(self) -> None:
+        self.__instantiate_model()
+    
+    def __instantiate_model(self) -> Model:
+        self.model = self.model_class(context=True)
+        self.model_loaded = True
+        return self.model
+    
+    def prompt(
+        self,
+        input: str,
+    ) -> str:
+        completion = "".join(self.model.fn(
+            input=input,
+            temperature=0.7,
+            stop=["\n"],
+        ))
+        return completion
 
+class AugmentedPrompter(Model):
+    def __init__(
+        self,
+        model_class: typing.Type[Model],
+    ) -> None:
+        super().__init__()
+
+        self.model_class = model_class
+        self.model_loaded = False
+        self.fn = self.prompt
+    
+    def reset(self) -> None:
+        self.__instantiate_model()
         self.config = PromptConfig()
         self.templates = self._load_prompts("conversation/prompts/")
-        self.responses = {
-            "clarifier": None,
-            "retrieval": None,
-            "summerizer": None,
-        }
         self.session = {
             "history": [],
             "history_summaries": [],
             "prefix": None,
             "suffix": None,
         }
-
         self.retriever = BiEncoderRetriever()
-        self.fn = self.prompt
+    
+    def __instantiate_model(self) -> Model:
+        self.model = self.model_class(context=False)
+        self.role_key = "role"
+
+        if isinstance(self.model, PaLM):
+            self.model = self.model_class(
+                model="models/text-bison-001",
+                context=False,
+            )
+            self.role_key = "author"
+
+        self.model_loaded = True
+        return self.model
     
     def prompt(
         self,
-        input:str,
+        input: str,
     ) -> str:
-        # Conversation Layer
-        print("\n ** Extractor **")
-        knowledge, query = self.extract(input)
-        print("* Knowledge, Question:", (knowledge, query))
+        attempts = 0
+        while attempts < 3:
+            try:
+                # Conversation Layer
+                print("\n ** Extractor **")
+                knowledge, query = self.extract(input)
+                print("* Knowledge, Question:", (knowledge, query))
 
-        print("\n ** Retriever **")
-        retrieval = self.retrieve(query)
-        print("* Retrieval:", retrieval)
+                print("\n ** Retriever **")
+                retrieval = self.retrieve(query)
+                print("* Retrieval:", retrieval)
 
-        print("\n ** Reasoning **")
-        conclusion = self.reasoning(knowledge + retrieval, query)
-        print("* Conclusion:", conclusion)
+                print("\n ** Reasoning **")
+                conclusion = self.reasoning(knowledge + retrieval, query)
+                print("* Conclusion:", conclusion)
 
-        print("\n ** Generator **")
-        response = self.generate(conclusion, query)
-        print("* Generation:", response)
+                print("\n ** Generator **")
+                response = self.generate(conclusion, query)
+                print("* Generation:", response)
 
-        self.session["history"].extend([
-            {"role": "User", "content": input},
-            {"role": "Assistant", "content": response},
-        ])
+                extended_history = [
+                    {self.role_key: "user", "content": input},
+                    {self.role_key: "assistant", "content": response},
+                ]
 
-        # Memorization Layer
-        ## TODO: Conversation 결과를 제공한 후 Memorize하여 응답 시간 단축
-        summaries = self.summarize(self.session["history"])
-        print(" ** Summarization **\n", summaries)
+                # Memorization Layer
+                ## TODO: Conversation 결과를 제공한 후 Memorize하여 응답 시간 단축
+                summaries = self.summarize(self.session["history"])
+                print(" ** Summarization **\n", summaries)
 
-        self.session["history_summary"] = summaries
+                self.session["history_summaries"].extend(summaries)
+                self.session["history"].extend(extended_history)
 
-        return response
-    
+                return response
+            except Exception as e:
+                print(f"Attempt {attempts+1} failed with error: {e}")
+                if attempts < 3:
+                    time.sleep(1)
+                attempts += 1
+        return "Sorry, there was an error processing your request. Please try again, and if the error persists, reset the conversation and start over."
+
     def clarify(
         self,
         input: str,
@@ -103,7 +156,7 @@ class Prompter(Model):
         print("* Completion:", completion)
 
         knowledge = self._parse_completion(completion, "Knowledge")
-        query = self._parse_completion(completion, "Query")
+        query = self._parse_completion(completion, "Query")[0]
     
         return knowledge, query
     
@@ -111,14 +164,29 @@ class Prompter(Model):
         self,
         query: str,
     ) -> list[str]:
-        if len(self.session["history_summaries"]) == 0:
+        prompt = self.templates["retriever"].format(
+            question=query,
+        )
+        print("* Prompt:", prompt)
+        completion = "".join(self.model.fn(
+            input=prompt,
+            temperature=0,
+            history=self.session["history"],
+        ))
+        print("* Completion:", completion)
+
+        if "i can't answer" in completion.strip().lower() or "i cannot answer" in completion.strip().lower():
             return []
+        elif len(self.session["history_summaries"]) == 0:
+            return [completion]
 
         retrieval = self.retriever.retrieve_top_summaries(
             query, self.session["history_summaries"],
         )
 
-        return retrieval
+        if "i can't answer" in completion.strip().lower() or "i cannot answer" in completion.strip().lower():
+            return retrieval
+        return [completion] + retrieval
     
     def reasoning(
         self,
@@ -126,7 +194,7 @@ class Prompter(Model):
         query: str,
     ) -> str:
         prompt = self.templates["reasoner"].format(
-            knowledge=knowledge,
+            knowledge="\n".join(f"({i+1}) {item}" for i, item in enumerate(knowledge)),
             query=query,
         )
         print("* Prompt:", prompt)
@@ -136,7 +204,8 @@ class Prompter(Model):
         ))
         print("* Completion:", completion)
 
-        conclusion = self._parse_completion(completion, "Conclusion")
+        #conclusion = self._parse_completion(completion, "Conclusion")[0]
+        conclusion = completion
 
         if len(conclusion) == 0:
             conclusion = ""
@@ -168,7 +237,7 @@ class Prompter(Model):
         self,
         history: list[dict[str, str]],
     ) -> list[str]:
-        dialogue = "\n".join(f"{item['role']}: {item['content']}" for item in history)
+        dialogue = "\n".join(f"{item[self.role_key]}: {item['content']}" for item in history)
 
         prompt = self.templates["summarizer"].format(
             dialogue=dialogue,
@@ -227,7 +296,7 @@ class Prompter(Model):
             if content.startswith("- "):
                 return [item.strip().replace("- ", "").replace("* ", "") for item in content.split("\n") if item.strip()]
             else:
-                return content
+                return [content]
         else:
             return []
 

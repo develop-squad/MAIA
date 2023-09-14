@@ -27,18 +27,21 @@ class ChatGPT(Model):
     def prompt(
         self,
         input,
-        temperature=1.0, # 0~2.0
+        temperature=0.7, # 0~2.0
         top_p=1.0,
         frequency_penalty=0, # -2.0~2.0
         presence_penalty=0, # -2.0~2.0
         stop=[], # up to 4 sequences
+        history=None,
     ):
         message = {
             "role": "user",
             "content": input,
         }
 
-        if self.context:
+        if type(history) is list:
+            self.messages = history + [message]
+        elif self.context:
             self.messages.append(message)
         else:
             self.messages = [message]

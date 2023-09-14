@@ -10,6 +10,8 @@ class PaLM(Model):
         model: str = "models/chat-bison-001",
         context: bool = True,
     ):
+        super().__init__()
+        
         self.api_key = api_key or os.getenv("GOOGLE_API_KEY", "")
         assert (
             self.api_key
@@ -26,20 +28,23 @@ class PaLM(Model):
     def prompt(
         self,
         input,
-        temperature=0.25,
+        temperature=0.7,
         top_p=0.95,
         top_k=40,
         stop=[],
+        history=None,
     ):
         message = {
             "author": "user",
             "content": input,
         }
 
-        if self.context:
+        if type(history) is list:
+            self.messages = history + [message]
+        elif self.context:
             self.messages.append(message)
         else:
-            self.messages = message
+            self.messages = [message]
 
         if self.model_name == "models/chat-bison-001":
             chat = palm.chat(
@@ -49,6 +54,7 @@ class PaLM(Model):
                 top_p=top_p,
                 top_k=top_k,
             )
+            print(chat)
             author = chat.messages[-1]['author']
             reply = chat.messages[-1]['content']
         else:
