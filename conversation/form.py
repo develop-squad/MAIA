@@ -16,7 +16,7 @@ class ConversationForm(PairwiseForm):
     ):
         # Excluded 1 turn before and after
         # minimum = 1
-        self.turns = 3
+        self.turns = 1
 
         self.scales = {
             "likert": [
@@ -566,10 +566,6 @@ class ConversationForm(PairwiseForm):
         else:
             message = chatbot[-1][1]
             assistant_message['augmented_model'] = message
-        
-        assistant_message = dict()
-        assistant_message['base_model'] = message1 if self.random_num == 0 else message2
-        assistant_message['augmented_model'] = message2 if self.random_num == 0 else message1
         
         self.user_temp[id_input]['scenario_count'] += 1
         description = self.__get_current_scenario(id_input)
