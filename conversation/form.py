@@ -16,7 +16,7 @@ class ConversationForm(PairwiseForm):
     ):
         # Excluded 1 turn before and after
         # minimum = 1
-        self.turns = 3
+        self.turns = 1
 
         self.scales = {
             "likert": [
@@ -554,10 +554,6 @@ class ConversationForm(PairwiseForm):
             for i in range(-1, -5, -1):
                 all_questions[i] = "augmented" if all_questions[i] == 1 else "base"
 
-        message1, message2 = chatbot[-1][1].split('[Model 2]')
-        message1 = message1.replace("[Model 1]","").strip()
-        message2 = message2.strip()
-        
         assistant_message = dict()
         
         if self.user_temp[id_input]['situation_idx'] <= 2:
