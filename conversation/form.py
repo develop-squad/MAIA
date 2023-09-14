@@ -17,7 +17,7 @@ class ConversationForm(PairwiseForm):
         # Excluded 1 turn before and after
         # minimum = 1
         self.turns = 3
-        self.skip_btn_visible=True
+        self.skip_btn_visible=False
 
         self.scales = {
             "likert": [
@@ -339,8 +339,11 @@ class ConversationForm(PairwiseForm):
                          pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
                 queue=True,
             ).then(
-                lambda: (gr.update(visible=True),) * 4,
-                outputs=[ques_row1, ques_row2, ques_row3, pair_row],
+                self.__set_eval_visible,
+                inputs=id_input,
+                outputs=[ques_row1, ques_row2, ques_row3, pair_row,
+                         question1, question2, question3, question4, question5, question6,
+                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
                 queue=True,
             ).then(
                 self.__select_btn,
@@ -366,8 +369,11 @@ class ConversationForm(PairwiseForm):
                 outputs=chatbot,
                 queue=True
             ).then(
-                lambda: (gr.update(visible=True),) * 4,
-                outputs=[ques_row1, ques_row2, ques_row3, pair_row],
+                self.__set_eval_visible,
+                inputs=id_input,
+                outputs=[ques_row1, ques_row2, ques_row3, pair_row,
+                         question1, question2, question3, question4, question5, question6,
+                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
                 queue=True,
             ).then(
                 self.__select_btn,
@@ -397,6 +403,11 @@ class ConversationForm(PairwiseForm):
                 lambda: (gr.update(value=None),) * 2,
                 inputs=None,
                 outputs=[chatbot, audio_record],
+                queue=True
+            ).then(
+                lambda: gr.update(value=""),
+                inputs=None,
+                outputs=[text_input],
                 queue=True
             ).then(
                 lambda: gr.update(visible=True),
@@ -497,6 +508,22 @@ class ConversationForm(PairwiseForm):
         
         return form
 
+    def __set_eval_visible(self, id_input):
+        if self.user_temp[id_input]['situation_idx'] <= 2:
+            return (gr.update(visible=True),) * 14
+        else:
+            '''
+            ques_row1, ques_row2, ques_row3, pair_row,
+                         question1, question2, question3, question4, question5, question6,
+                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
+            '''
+            return (gr.update(visible=True),) * 3 \
+                    + (gr.update(visible=False),) * 4 \
+                    + (gr.update(visible=True, scale=1, label='Is the response make sense?'), \
+                        gr.update(visible=True, scale=1, label='Is the context of the response consistent?'), \
+                        gr.update(visible=True, scale=1, label='Are you interested in the response? Would you like to continue the conversation?'),) \
+                    + (gr.update(visible=False),) * 4
+
     def __get_current_scenario(self, mturk_worker_id):
         if mturk_worker_id:
             scenario_count = self.user_temp[mturk_worker_id]['scenario_count']
@@ -558,23 +585,23 @@ class ConversationForm(PairwiseForm):
         return gr.update(value=None)
     
     def __save_survey(self, id_input, chatbot, finish_button, situation_description, *args):
-        all_questions = list(args)
+        all_questions = list(args) if self.user_temp[id_input]['situation_idx'] <= 2 else list(args[3:6])
         if None in all_questions:
             gr.Warning(self.evaluation_check_msg)
-            return (gr.update(visible=True),) * 5 + (finish_button, situation_description, gr.update(visible=False),) + tuple(all_questions)
+            return (gr.update(visible=True),) * 5 + (finish_button, situation_description, gr.update(visible=False),) + args
         
-        # if self.random_num == 0 1=base, 2=augmented
-        # else 1=augmented, 2=base
-        if self.random_num == 0:
-            for i in range(-1, -5, -1):
-                all_questions[i] = "base" if all_questions[i] == 1 else "augmented"
-        else:
-            for i in range(-1, -5, -1):
-                all_questions[i] = "augmented" if all_questions[i] == 1 else "base"
-
         assistant_message = dict()
         
         if self.user_temp[id_input]['situation_idx'] <= 2:
+            # if self.random_num == 0 1=base, 2=augmented
+            # else 1=augmented, 2=base
+            if self.random_num == 0:
+                for i in range(-1, -5, -1):
+                    all_questions[i] = "base" if all_questions[i] == 1 else "augmented"
+            else:
+                for i in range(-1, -5, -1):
+                    all_questions[i] = "augmented" if all_questions[i] == 1 else "base"
+
             message1, message2 = chatbot[-1][1].split('[Model 2]')
             message1 = message1.replace("[Model 1]","").strip()
             message2 = message2.strip()
@@ -602,8 +629,10 @@ class ConversationForm(PairwiseForm):
             self.user_data[id_input]["result"][f"situation{self.user_temp[id_input]['situation_idx'] + 1}"].append(content)
         else:
             self.user_data[id_input]["result"]["freetalk"].append(content)
-
-        return (gr.update(visible=False),) * 6 + (gr.update(value=description), gr.update(visible=True),) + (gr.update(value=None),) * len(args)
+            
+        return (gr.update(visible=False),) * 6 \
+                + (gr.update(value=description), gr.update(visible=True),) \
+                + (gr.update(value=None),) * len(args)
     
     def __process(self, history, id_input):
         input = history[-1][0]
@@ -685,7 +714,7 @@ class ConversationForm(PairwiseForm):
     def __finish_conversation(self,
                              id_input, chatbot,
                              situation_title, *args):
-        all_questions = list(args)
+        all_questions = list(args) if self.user_temp[id_input]['situation_idx'] <= 2 else list(args[3:6])
         if None in all_questions:
             gr.Warning(self.evaluation_check_msg)
             return (gr.update(visible=True),) * 9 \
@@ -694,18 +723,18 @@ class ConversationForm(PairwiseForm):
                     + (gr.update(visible=False),) * 1 \
                     + args
     
-        # if self.random_num == 0 1=base, 2=augmented
-        # else 1=augmented, 2=base
-        if self.random_num == 0:
-            for i in range(-1, -5, -1):
-                all_questions[i] = "base" if all_questions[i] == 1 else "augmented"
-        else:
-            for i in range(-1, -5, -1):
-                all_questions[i] = "augmented" if all_questions[i] == 1 else "base"
-
         assistant_message = dict()
-        
+
         if self.user_temp[id_input]['situation_idx'] <= 2:
+            # if self.random_num == 0 1=base, 2=augmented
+            # else 1=augmented, 2=base
+            if self.random_num == 0:
+                for i in range(-1, -5, -1):
+                    all_questions[i] = "base" if all_questions[i] == 1 else "augmented"
+            else:
+                for i in range(-1, -5, -1):
+                    all_questions[i] = "augmented" if all_questions[i] == 1 else "base"
+        
             message1, message2 = chatbot[-1][1].split('[Model 2]')
             message1 = message1.replace("[Model 1]","").strip()
             message2 = message2.strip()
