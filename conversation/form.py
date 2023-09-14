@@ -512,11 +512,6 @@ class ConversationForm(PairwiseForm):
         if self.user_temp[id_input]['situation_idx'] <= 2:
             return (gr.update(visible=True),) * 14
         else:
-            '''
-            ques_row1, ques_row2, ques_row3, pair_row,
-                         question1, question2, question3, question4, question5, question6,
-                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
-            '''
             return (gr.update(visible=True),) * 3 \
                     + (gr.update(visible=False),) * 4 \
                     + (gr.update(visible=True, scale=1, label='Is the response make sense?'), \
