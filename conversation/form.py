@@ -207,7 +207,7 @@ class ConversationForm(PairwiseForm):
                         "Continue this conversation",
                     )
                 finish_message = gr.Markdown(
-                        "### Please go to the Usability Evaluation tab.",
+                        "### Navigate to the Usability Evaluation tab.",
                         visible=False,
                         show_label=False,
                     )
@@ -559,6 +559,19 @@ class ConversationForm(PairwiseForm):
         message2 = message2.strip()
         
         assistant_message = dict()
+        
+        if self.user_temp[id_input]['situation_idx'] <= 2:
+            message1, message2 = chatbot[-1][1].split('[Model 2]')
+            message1 = message1.replace("[Model 1]","").strip()
+            message2 = message2.strip()
+
+            assistant_message['base_model'] = message1 if self.random_num == 0 else message2
+            assistant_message['augmented_model'] = message2 if self.random_num == 0 else message1
+        else:
+            message = chatbot[-1][1]
+            assistant_message['augmented_model'] = message
+        
+        assistant_message = dict()
         assistant_message['base_model'] = message1 if self.random_num == 0 else message2
         assistant_message['augmented_model'] = message2 if self.random_num == 0 else message1
         
@@ -655,9 +668,7 @@ class ConversationForm(PairwiseForm):
                     + (gr.update(visible=True),) * 2 \
                     + (gr.update(visible=False),) * 1 \
                     + args
-        
-        # situation 필요함
-        
+    
         # if self.random_num == 0 1=base, 2=augmented
         # else 1=augmented, 2=base
         if self.random_num == 0:
@@ -667,13 +678,18 @@ class ConversationForm(PairwiseForm):
             for i in range(-1, -5, -1):
                 all_questions[i] = "augmented" if all_questions[i] == 1 else "base"
 
-        message1, message2 = chatbot[-1][1].split('[Model 2]')
-        message1 = message1.replace("[Model 1]","").strip()
-        message2 = message2.strip()
-        
         assistant_message = dict()
-        assistant_message['base_model'] = message1 if self.random_num == 0 else message2
-        assistant_message['augmented_model'] = message2 if self.random_num == 0 else message1
+        
+        if self.user_temp[id_input]['situation_idx'] <= 2:
+            message1, message2 = chatbot[-1][1].split('[Model 2]')
+            message1 = message1.replace("[Model 1]","").strip()
+            message2 = message2.strip()
+
+            assistant_message['base_model'] = message1 if self.random_num == 0 else message2
+            assistant_message['augmented_model'] = message2 if self.random_num == 0 else message1
+        else:
+            message = chatbot[-1][1]
+            assistant_message['augmented_model'] = message
         
         content = dict()
         content["mturk_worker_id"] = id_input
