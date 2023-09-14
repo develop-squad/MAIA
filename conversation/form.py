@@ -591,9 +591,19 @@ class ConversationForm(PairwiseForm):
             # if self.random_num == 0 1=base, 2=augmented
             # else 1=augmented, 2=base
             if self.random_num == 0:
+                for i in range(0, 3):
+                    all_questions[i] = f"base={all_questions[i]}"
+                for i in range(3, 6):
+                    all_questions[i] = f"augmented={all_questions[i]}"
+                
                 for i in range(-1, -5, -1):
                     all_questions[i] = "base" if all_questions[i] == 1 else "augmented"
             else:
+                for i in range(0, 3):
+                    all_questions[i] = f"augmented={all_questions[i]}"
+                for i in range(3, 6):
+                    all_questions[i] = f"base={all_questions[i]}"
+
                 for i in range(-1, -5, -1):
                     all_questions[i] = "augmented" if all_questions[i] == 1 else "base"
 
@@ -606,6 +616,8 @@ class ConversationForm(PairwiseForm):
         else:
             message = chatbot[-1][1]
             assistant_message['augmented_model'] = message
+            for i in range(len(all_questions)):
+                all_questions[i] = f"augmented={all_questions[i]}"
         
         self.user_temp[id_input]['scenario_count'] += 1
         description = self.__get_current_scenario(id_input)
@@ -724,9 +736,19 @@ class ConversationForm(PairwiseForm):
             # if self.random_num == 0 1=base, 2=augmented
             # else 1=augmented, 2=base
             if self.random_num == 0:
+                for i in range(0, 3):
+                    all_questions[i] = f"base={all_questions[i]}"
+                for i in range(3, 6):
+                    all_questions[i] = f"augmented={all_questions[i]}"
+
                 for i in range(-1, -5, -1):
                     all_questions[i] = "base" if all_questions[i] == 1 else "augmented"
             else:
+                for i in range(0, 3):
+                    all_questions[i] = f"augmented={all_questions[i]}"
+                for i in range(3, 6):
+                    all_questions[i] = f"base={all_questions[i]}"
+
                 for i in range(-1, -5, -1):
                     all_questions[i] = "augmented" if all_questions[i] == 1 else "base"
         
@@ -739,6 +761,8 @@ class ConversationForm(PairwiseForm):
         else:
             message = chatbot[-1][1]
             assistant_message['augmented_model'] = message
+            for i in range(len(all_questions)):
+                all_questions[i] = f"augmented={all_questions[i]}"
         
         content = dict()
         content["mturk_worker_id"] = id_input
