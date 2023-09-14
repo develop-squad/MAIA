@@ -16,7 +16,7 @@ class ConversationForm(PairwiseForm):
     ):
         # Excluded 1 turn before and after
         # minimum = 1
-        self.turns = 1
+        self.turns = 3
 
         self.scales = {
             "likert": [
