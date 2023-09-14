@@ -16,7 +16,8 @@ class ConversationForm(PairwiseForm):
     ):
         # Excluded 1 turn before and after
         # minimum = 1
-        self.turns = 1
+        self.turns = 3
+        self.skip_btn_visible=True
 
         self.scales = {
             "likert": [
@@ -113,7 +114,8 @@ class ConversationForm(PairwiseForm):
                         )
                     with gr.Column(scale=0.2, min_width=0):
                         save_id_button = gr.Button("Save MTurk Worker ID")
-
+                skip_button = gr.Button("Skip situations",
+                                        visible=False)
                 with gr.Column():
                     situation_title = gr.Markdown(
                         "## System Usage Instruction",
@@ -294,11 +296,25 @@ class ConversationForm(PairwiseForm):
             # id save button
             save_id_button.click(
                 self.__save_id,
-                inputs=[id_input, save_id_button,
+                inputs=[id_input, save_id_button, skip_button,
                         situation_title, situation_description, chatbot],
-                outputs=[id_input, save_id_button,
+                outputs=[id_input, save_id_button, skip_button,
                          situation_title, situation_description, chatbot, input_column],
                 queue=False,
+            )
+            
+            # skip button
+            skip_button.click(
+                self.__skip_situations,
+                inputs=[id_input],
+                outputs=[situation_description,
+                         chatbot, ques_row1, ques_row2, ques_row3,
+                         pair_row, btn_row, finish_button, input_column,
+                         audio_record, text_input, last_row, skip_button,
+                         question1, question2, question3,
+                         question4, question5, question6,
+                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
+                queue=True
             )
             
             # audio recording component
@@ -527,12 +543,14 @@ class ConversationForm(PairwiseForm):
         history = history + [((audio_file.name,), None)]
         return history, gr.update(value="", interactive=False)
     
-    def __save_id(self, id_input, save_id_button, *args):
+    def __save_id(self, id_input, save_id_button, skip_button, *args):
         if not id_input:
-            return (id_input, save_id_button, ) + tuple(args) + (gr.update(visible=False), )
+            return (id_input, save_id_button, skip_button,) + tuple(args) + (gr.update(visible=False), )
         # self.data[id_input]["mturk_worker_id"] = id_input
         self.__init_user_data(id_input)
-        return (gr.update(interactive=False), ) * 2 + (gr.update(visible=True), ) * (len(args) + 1)
+        return (gr.update(interactive=False), ) * 2 \
+                + (gr.update(visible=self.skip_btn_visible),) \
+                + (gr.update(visible=True),) * (len(args) + 1)
     
     def __clear_audio(self, audio):
         if not audio:
@@ -648,6 +666,21 @@ class ConversationForm(PairwiseForm):
         elif self.user_temp[id_input]['situation_idx'] > 2 and self.user_temp[id_input]['scenario_count'] >= (self.turns - 1):
             return gr.update(visible=True), gr.update(visible=True)
         return gr.update(visible=True), gr.update(visible=False)
+    
+    def __skip_situations(self, id_input):
+        self.user_temp[id_input]['situation_idx'] = 3
+        self.user_temp[id_input]['scenario_count'] = 0
+        situation_msg = self.__get_current_scenario(id_input)
+        self.user_model[id_input].generate_model_1.reset()
+        self.user_model[id_input].generate_model_2.reset()
+        self.logger.info(f"HIT: User {id_input} skipped situations.")
+        return (gr.update(value=situation_msg),) \
+                + (gr.update(value=None),) \
+                + (gr.update(visible=False),) * 6 \
+                + (gr.update(visible=True),) \
+                + (gr.update(value=None, visible=True),) * 2 \
+                + (gr.update(visible=False),) * 2 \
+                + (gr.update(value=False),) * 10
     
     def __finish_conversation(self,
                              id_input, chatbot,
