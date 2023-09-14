@@ -182,7 +182,7 @@ class ConversationForm(PairwiseForm):
                     )
                     pairwise_question3 = gr.Radio(
                         choices=self.scales["comparison"],
-                        label="Which response is more interesting?",
+                        label="Which response feels more personalized?",
                         show_label=True,
                     )
                     pairwise_question4 = gr.Radio(
