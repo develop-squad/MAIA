@@ -107,6 +107,7 @@ class AugmentedPrompter(Model):
                     {self.role_key: "user", "content": input},
                     {self.role_key: "assistant", "content": response},
                 ]
+                self.session["history"].extend(extended_history)
 
                 # Memorization Layer
                 ## TODO: Conversation 결과를 제공한 후 Memorize하여 응답 시간 단축
@@ -114,7 +115,6 @@ class AugmentedPrompter(Model):
                 print(" ** Summarization **\n", summaries)
 
                 self.session["history_summaries"].extend(summaries)
-                self.session["history"].extend(extended_history)
 
                 return response
             except Exception as e:
@@ -173,11 +173,14 @@ class AugmentedPrompter(Model):
             temperature=0,
             history=self.session["history"],
         ))
+        print("* History:", self.session["history"])
         print("* Completion:", completion)
 
-        if "i can't answer" in completion.strip().lower() or "i cannot answer" in completion.strip().lower():
-            return []
-        elif len(self.session["history_summaries"]) == 0:
+        hsitory_content = [f"{x[self.role_key]}: {x['content']}" for x in self.session["history"]]
+
+        if len(self.session["history_summaries"]) == 0:
+            if "i can't answer" in completion.strip().lower() or "i cannot answer" in completion.strip().lower():
+                return hsitory_content
             return [completion]
 
         retrieval = self.retriever.retrieve_top_summaries(
@@ -185,7 +188,9 @@ class AugmentedPrompter(Model):
         )
 
         if "i can't answer" in completion.strip().lower() or "i cannot answer" in completion.strip().lower():
-            return retrieval
+            if retrieval:
+                return retrieval
+            return self.session["history_summaries"]
         return [completion] + retrieval
     
     def reasoning(
@@ -242,10 +247,12 @@ class AugmentedPrompter(Model):
         prompt = self.templates["summarizer"].format(
             dialogue=dialogue,
         )
+        print("* Prompt:", prompt)
         completion = "".join(self.model.fn(
             input=prompt,
             temperature=0,
         ))
+        print("* Completion:", completion)
 
         summary = self._parse_completion(completion, "Summary")
         
@@ -284,7 +291,7 @@ class AugmentedPrompter(Model):
         completion: str,
         title: str
     ) -> typing.Union[list[str], str]:
-        start_tags = [f"#{title}\n", f"#{title}: ", f"{title}: ", f"{title}\n"]
+        start_tags = [f"#{title}\n", f"#{title}:", f"{title}:", f"{title}\n"]
         end_tag = "#"
         
         start_tag = next((tag for tag in start_tags if tag in completion), None)
