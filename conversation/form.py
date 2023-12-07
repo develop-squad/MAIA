@@ -89,7 +89,7 @@ class ConversationForm(PairwiseForm):
         user_model.generate_model_2.reset()
         self.user_model[mturk_worker_id] = user_model
 
-        if int(mturk_worker_id) == 2288:
+        if mturk_worker_id == "2288":
             self.user_temp[mturk_worker_id]['admin'] = True
 
     def _create_form(self) -> gr.Blocks:
