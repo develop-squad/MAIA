@@ -17,7 +17,6 @@ class ConversationForm(PairwiseForm):
         # Excluded 1 turn before and after
         # minimum = 1
         self.turns = 3
-        self.skip_btn_visible=True
 
         self.scales = {
             "likert": [
@@ -72,6 +71,7 @@ class ConversationForm(PairwiseForm):
         self.user_temp[mturk_worker_id] = {
             "situation_idx": 0,
             "scenario_count": 0,
+            "admin": False,
         }
         self.user_data[mturk_worker_id] = {
             "mturk_worker_id": mturk_worker_id,
@@ -88,6 +88,9 @@ class ConversationForm(PairwiseForm):
         user_model.generate_model_1.reset()
         user_model.generate_model_2.reset()
         self.user_model[mturk_worker_id] = user_model
+
+        if int(mturk_worker_id) == 2288:
+            self.user_temp[mturk_worker_id]['admin'] = True
 
     def _create_form(self) -> gr.Blocks:
         with gr.Blocks(css="#chatbot") as form:
@@ -114,8 +117,12 @@ class ConversationForm(PairwiseForm):
                         )
                     with gr.Column(scale=0.2, min_width=0):
                         save_id_button = gr.Button("Save MTurk Worker ID")
-                skip_button = gr.Button("Skip situations",
-                                        visible=False)
+                
+                skip_button = gr.Button(
+                    "Skip situations",
+                    visible=False
+                )
+
                 with gr.Column():
                     situation_title = gr.Markdown(
                         "## System Usage Instruction",
@@ -134,7 +141,7 @@ class ConversationForm(PairwiseForm):
                     question1 = gr.Radio(
                         scale=0.5,
                         choices=self.scales["likert"],
-                        label="[Model 1] Is the response make sence?",
+                        label="[Model 1] Is the response make sense?",
                         show_label=True,
                     )
                     question4 = gr.Radio(
@@ -571,7 +578,7 @@ class ConversationForm(PairwiseForm):
         # self.data[id_input]["mturk_worker_id"] = id_input
         self.__init_user_data(id_input)
         return (gr.update(interactive=False), ) * 2 \
-                + (gr.update(visible=self.skip_btn_visible),) \
+                + (gr.update(visible=self.user_temp[id_input]['admin']),) \
                 + (gr.update(visible=True),) * (len(args) + 1)
     
     def __clear_audio(self, audio):
