@@ -1,3 +1,3 @@
-Ask HI-MAIA for stress relief methods.
-Engage in a {}-turn conversation on diseases to be cautious of with HI-MAIA.
-Ask HI-MAIA what stress relief method it initially suggested.
+Request stress relief methods from the assistant.
+Engage in a {}-turn conversation with the assistant about diseases to be cautious of.
+Inquire from the assistant about the first stress relief method it suggested.

@@ -537,13 +537,13 @@ class ConversationForm(PairwiseForm):
         
         if situation_idx <= 2:
             description = self.guidance["system_usage_instruction"].format(
-                "\n".join([f"Step {i+1}) {situation}"
+                "\n".join([f"<div>Step {i+1}) {situation}</div>"
                            if i != scenario_idx
-                           else f"<span style=\"color: red; background-color: white;\">Step {i+1}) {situation}</span>"
+                           else f"<div style=\"color: red; background-color: white;\">Step {i+1}) {situation}</div>"
                            for i, situation in enumerate(self.situations[situation_idx])]))
             description = description.format(self.turns)
         else:
-            description = "<span style=\"color: red; background-color: white;\">Engage in a free talk with the IA for at least 3 turns.</span>"
+            description = "<div style=\"color: red; background-color: white;\">Engage in a free talk with the IA for at least 3 turns.</div>"
         return description
 
     def __save_irb_agreement(self, irb_agreement, irb_button, irb_msg):
