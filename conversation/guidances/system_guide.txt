@@ -1,12 +1,11 @@
 ## System Guide
 1. Enter your MTurk Worker ID and click the **Save MTurk Worker ID** button.
-2. Click the **Record from microphone** button, wait for 2 seconds, and start speaking.
-3. Once you've finished speaking, click the **Stop recording** button to complete the recording.
-4. Please wait for the IA to respond.
-5. Evaluate all ten items for [Model 1] and [Model 2].
-6. Once you've evaluated everything, click the Continue this conversation button, wait for a moment, then repeat from step 2 to complete the given situation.
-7. Once you've completed all the conversations for the given situation, click the **Finish this conversation** button.
-8. The following situation will be provided. Please repeat steps 2 to 7.
-9. After completing all three situations and clicking the **Finish this conversation** button, proceed with the final evaluation and click the **Submit** button.
-10. Please conduct the **Usability Evaluation**.
-* **NOTE** If you cannot proceed at any intermediate step, click the **Reset this conversation** button, and you can start again from step 2.
+2. Type the message you wish to send to the Intelligent Assistant (IA) and click the **Send** button.
+3. Wait for the IA to respond.
+4. Evaluate the ten items for [Model 1] and [Model 2].
+5. After completing the evaluations, click the **Continue this conversation** button. Pause briefly before repeating the process from step 2 to meet the current situation.
+6. After completing all conversations for the given situation, click the **Finish this conversation** button.
+7. A new situation will then be provided. Repeat steps 2 to 7 for this new scenario.
+8. Upon completing all three situations and clicking the **Finish this conversation** button for the last one, move on to the final evaluation. Then click the **Submit** button.
+9. Conduct the **Usability Evaluation** as instructed.
+* **NOTE** If you encounter difficulties at any step and cannot proceed, click the **Reset this conversation** button to restart from step 2.

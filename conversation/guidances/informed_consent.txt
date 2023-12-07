@@ -1,11 +1,10 @@
 ## HUMAN SUBJECT Informed Consent
 
-### Experiment Title: Human Interaction with Memory-augmented Intelligent Assistant
+### Experiment Title: Memory-augmented Intelligent Assistant
 This research aims to improve the memory capabilities of an Intelligent Assistant (IA) through an enhanced memory dialogue model. An IA is a computer system that interacts with humans using voice language, providing intelligent support in daily life. Due to the absence of long-term memory capabilities in existing IAs, they fail to adequately reflect the user's past interactions, preferences, status, and behaviors. Through this research, we aim to explore ways for the IA to offer a more personalized experience to users.
 
 ## IMPORTANT NOTE
 - Only individuals who are proficient in English communication can participate.
 - If you are deemed to have responded insincerely, your assignment will be rejected. Consequently, you will not receive any reward.
-- Those who approach the task diligently will be reviewed and may receive a bonus reward.
 
 ### Having understood the details of the experiment, do you agree to participate?
