@@ -201,11 +201,11 @@ class ConversationForm(PairwiseForm):
                         show_label=True,
                     )
                 with gr.Column(visible=False) as input_column:
-                    audio_record = gr.Audio(
-                        show_label=False,
-                        source="microphone",
-                        type="filepath",
-                    )
+                    # audio_record = gr.Audio(
+                    #     show_label=False,
+                    #     source="microphone",
+                    #     type="filepath",
+                    # )
                     text_input = gr.Textbox(
                         show_label=False,
                         placeholder=self.text_input_hint
@@ -317,13 +317,16 @@ class ConversationForm(PairwiseForm):
             skip_button.click(
                 self.__skip_situations,
                 inputs=[id_input],
-                outputs=[situation_description,
-                         chatbot, ques_row1, ques_row2, ques_row3,
-                         pair_row, btn_row, finish_button, input_column,
-                         audio_record, text_input, last_row, skip_button,
-                         question1, question2, question3,
-                         question4, question5, question6,
-                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
+                outputs=[
+                    situation_description,
+                    chatbot, ques_row1, ques_row2, ques_row3,
+                    pair_row, btn_row, finish_button, input_column,
+                    # audio_record,
+                    text_input, last_row, skip_button,
+                    question1, question2, question3,
+                    question4, question5, question6,
+                    pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4,
+                ],
                 queue=True
             )
             
