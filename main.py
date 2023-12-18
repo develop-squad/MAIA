@@ -65,25 +65,16 @@ def run_googletts(google_tts_api_key: str = "", **kwargs):
     launcher.launch_gradio(papago, config)
 
 def main(**kwargs):
-    from models.whisperx.core import WhisperX
     from models.chatgpt.core import ChatGPT
     from models.palm.core import PaLM
     from conversation.prompter import BasePrompter, AugmentedPrompter
     from conversation.form import ConversationForm
-    
-    whisper = WhisperX(
-        device=launcher.get_device(),
-        device_index=0,
-        compute_type="float32",
-        batch_size=16,
-    )
 
     model_class = ChatGPT
     base_model = BasePrompter(model_class)
     augmented_model = AugmentedPrompter(model_class)
 
     pipeline = PairwisePipeline(
-        transcribe_model=whisper,
         generate_model_1=base_model,
         generate_model_2=augmented_model,
     )

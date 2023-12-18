@@ -324,41 +324,6 @@ class ConversationForm(PairwiseForm):
                 queue=True
             )
             
-            # audio recording component
-            audio_record.stop_recording(
-                self.__add_record,
-                inputs=[chatbot, audio_record],
-                outputs=[chatbot, audio_record],
-                queue=False,
-            ).then(
-                lambda: gr.update(visible=False),
-                outputs=[input_column],
-                queue=False
-            ).then(
-                self.__process,
-                inputs=[chatbot, id_input],
-                outputs=chatbot,
-                queue=True
-            ).then(
-                lambda: (gr.update(value=None),) * 10,
-                inputs=None,
-                outputs=[question1, question2, question3, question4, question5, question6,
-                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
-                queue=True,
-            ).then(
-                self.__set_eval_visible,
-                inputs=id_input,
-                outputs=[ques_row1, ques_row2, ques_row3, pair_row,
-                         question1, question2, question3, question4, question5, question6,
-                         pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
-                queue=True,
-            ).then(
-                self.__select_btn,
-                inputs=[id_input],
-                outputs=[btn_row, finish_button],
-                queue=False
-            )
-            
             # text input component
             text_input.submit(
                 self.__add_text,
@@ -409,7 +374,7 @@ class ConversationForm(PairwiseForm):
             ).then(
                 lambda: (gr.update(value=None),) * 2,
                 inputs=None,
-                outputs=[chatbot, audio_record],
+                outputs=[chatbot],
                 queue=True
             ).then(
                 lambda: gr.update(value=""),
@@ -437,11 +402,6 @@ class ConversationForm(PairwiseForm):
                 lambda: (gr.update(interactive=False),) * 3,
                 outputs=[reset_button, continue_button, finish_button],
                 queue=False
-            ).then(
-                self.__clear_audio,
-                inputs=audio_record,
-                outputs=audio_record,
-                queue=True,
             ).then(
                 self.__save_survey,
                 inputs=[id_input, chatbot, finish_button, situation_description,
@@ -474,7 +434,7 @@ class ConversationForm(PairwiseForm):
                 outputs=[situation_description, situation_title,
                          chatbot, ques_row1, ques_row2, ques_row3,
                          pair_row, btn_row, finish_button, input_column,
-                         audio_record, text_input, last_row,
+                         text_input, last_row,
                          question1, question2, question3,
                          question4, question5, question6,
                          pairwise_question1, pairwise_question2, pairwise_question3, pairwise_question4],
@@ -562,16 +522,6 @@ class ConversationForm(PairwiseForm):
         history = history + [(text_input, None)]
         return history, gr.update(value="", placeholder="")
     
-    def __add_record(self, history, audio_record):
-        if not audio_record:
-            return history
-        history = history + [((audio_record,), None)]
-        return history, gr.update(value=None)
-
-    def __add_audio(self, history, audio_file):
-        history = history + [((audio_file.name,), None)]
-        return history, gr.update(value="", interactive=False)
-    
     def __save_id(self, id_input, save_id_button, skip_button, *args):
         if not id_input:
             return (id_input, save_id_button, skip_button,) + tuple(args) + (gr.update(visible=False), )
@@ -580,11 +530,6 @@ class ConversationForm(PairwiseForm):
         return (gr.update(interactive=False), ) * 2 \
                 + (gr.update(visible=self.user_temp[id_input]['admin']),) \
                 + (gr.update(visible=True),) * (len(args) + 1)
-    
-    def __clear_audio(self, audio):
-        if not audio:
-            return audio
-        return gr.update(value=None)
     
     def __save_survey(self, id_input, chatbot, finish_button, situation_description, *args):
         all_questions = list(args) if self.user_temp[id_input]['situation_idx'] <= 2 else list(args[3:6])
