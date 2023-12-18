@@ -116,7 +116,10 @@ class ConversationForm(PairwiseForm):
                             show_label=True
                         )
                     with gr.Column(scale=0.2, min_width=0):
-                        save_id_button = gr.Button("Save MTurk Worker ID")
+                        save_id_button = gr.Button(
+                            value="Save MTurk Worker ID",
+                            scale=2
+                        )
                 
                 skip_button = gr.Button(
                     "Skip situations",
