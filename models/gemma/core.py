@@ -2,6 +2,7 @@ import os
 import gradio as gr
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
+from accelerate import Accelerator
 from utils.model import Model
 
 class Gemma(Model):
@@ -18,8 +19,11 @@ class Gemma(Model):
             gemma_token
         ), "Please specify an --gemma_token"
 
+        self.accelerator = Accelerator()
+        self.device = self.accelerator.device
         self.tokenizer = AutoTokenizer.from_pretrained(model, token=gemma_token)
-        self.model = AutoModelForCausalLM.from_pretrained(model, token=gemma_token)
+        self.model = AutoModelForCausalLM.from_pretrained(model, token=gemma_token, device_map='auto')
+        self.model = self.accelerator.prepare(self.model)
         self.messages = []
         self.context = context
         
@@ -43,7 +47,7 @@ class Gemma(Model):
             self.messages = [message]
 
         input_text = "\n".join(self.messages)
-        input_ids = self.tokenizer.encode(input_text, return_tensors="pt")
+        input_ids = self.tokenizer.encode(input_text, return_tensors="pt").to(self.device)
 
         with torch.no_grad():
             output = self.model.generate(
