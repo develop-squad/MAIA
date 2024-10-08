@@ -1,3 +1,4 @@
+import os
 import gradio as gr
 import typing
 
@@ -19,3 +20,19 @@ class Model:
 
     def prompt(*args, **kwargs) -> str:
         return
+
+    def setup_ddp(
+        self,
+        rank: int = 0,
+        world_size: int = 1,
+    ) -> None:
+        import torch
+        import torch.distributed as dist
+        os.environ['MASTER_ADDR'] = 'localhost'
+        os.environ['MASTER_PORT'] = '12355'
+        dist.init_process_group('nccl', rank=rank, world_size=world_size)
+        torch.cuda.set_device(rank)
+    
+    def clean_ddp(self) -> None:
+        import torch.distributed as dist
+        dist.destroy_process_group()
